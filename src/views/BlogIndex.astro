@@ -1,0 +1,63 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import { SITE, isoDate, pad2 } from '../config';
+import { BLOG_COLL, fmtDate, r, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+
+interface Props {
+  lang: XLang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const p = t.blog;
+const base = r('blog', lang);
+const posts = (await getCollection(BLOG_COLL[lang])).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const crumbs = [{ name: p.crumb, href: base }];
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: p.name,
+  url: `${SITE.url}${base}`,
+  inLanguage: lang,
+  blogPost: posts.map((x) => ({ '@type': 'BlogPosting', headline: x.data.title, url: `${SITE.url}${base}${x.id}/`, datePublished: isoDate(x.data.date) })),
+};
+---
+
+<Base title={p.title} description={p.description} crumbs={crumbs} schema={[schema]} theme="ivory" serifAbove lang={lang}>
+  <PageHead title={p.h} sub={p.sub} lead={p.lead} crumbs={crumbs} />
+  <section class="wrap" aria-label={p.h} style="padding-bottom:var(--sec)">
+    {
+      posts.length === 0 ? (
+        <p class="copy">{p.empty}</p>
+      ) : (
+        <>
+          <p class="alt-tag mono" style="margin-bottom:1.25rem">
+            <b>{pad2(posts.length)}</b> {t.common.posts}
+          </p>
+          <ol class="rows">
+            {posts.map((x, i) => (
+              <li class="post-row">
+                <span class="post-row__no mono">{pad2(i + 1)}</span>
+                <p class="post-row__meta mono">
+                  <time datetime={isoDate(x.data.date)}>{fmtDate(x.data.date, lang)}</time>
+                  <span>{x.data.category}</span>
+                  <span>
+                    {x.data.readingTime} {t.common.minRead}
+                  </span>
+                </p>
+                <h2>
+                  <a href={`${base}${x.id}/`}>{x.data.title}</a>
+                </h2>
+                <span class="post-row__go arrow" aria-hidden="true">
+                  →
+                </span>
+              </li>
+            ))}
+          </ol>
+        </>
+      )
+    }
+  </section>
+</Base>

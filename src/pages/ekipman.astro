@@ -1,0 +1,110 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Ground from '../components/Ground.astro';
+import { SITE, pad2 } from '../config';
+
+const crumbs = [{ name: 'Ekipman', href: '/ekipman/' }];
+const description =
+  'Necip Bozdemir’in çekim ekipmanı: Sony A7 III, FX30, FS5 ve Canon 5DS R gövdeler, Samyang V-AF sinema lensleri, DJI Air 3S drone, DJI RS 4 gimbal ve Pocket 3.';
+
+// Liste site sahibinden (12.11.2026). Açıklamalar yalnızca ürünlerin üretici özellikleri.
+const GROUPS = [
+  {
+    id: 'kamera',
+    title: 'Kameralar',
+    lead: 'Fotoğraf ve video için dört gövde.',
+    items: [
+      { name: 'Sony A7 III', tag: 'Tam kare · aynasız', text: '24,2 MP tam kare sensör, 4K video ve gövde içi sabitleme. Düşük ışıkta temiz görüntü verir.' },
+      { name: 'Sony FX30', tag: 'Super 35 · sinema', text: 'Sony’nin Cinema Line serisinden. 4K kayıt, S-Log3 ve S-Cinetone renk profilleri.' },
+      { name: 'Sony FS5', tag: 'Super 35 · kamkorder', text: 'Profesyonel video kamerası. Dahili değişken ND filtresiyle ışık değiştikçe pozlama hızla ayarlanır.' },
+      { name: 'Canon EOS 5DS R', tag: 'Tam kare · 50,6 MP', text: 'Yüksek çözünürlüklü fotoğraf gövdesi. Büyük baskı ve ince detay isteyen karelerde kullanılır.' },
+    ],
+  },
+  {
+    id: 'lens',
+    title: 'Lensler',
+    lead: 'Sinema primeları ve iki zum.',
+    items: [
+      { name: 'Samyang V-AF 24 mm', tag: 'T1.9 · sinema', text: 'Geniş açı. Mekânı ve kalabalığı tek karede gösterir.' },
+      { name: 'Samyang V-AF 35 mm', tag: 'T1.9 · sinema', text: 'Gözün gördüğüne yakın açı. Belgesel tarzı anlatım için.' },
+      { name: 'Samyang V-AF 75 mm', tag: 'T1.9 · sinema', text: 'Portre açısı. Arka planı yumuşatıp yüze odaklanır.' },
+      { name: 'Sony E PZ 18-105 mm', tag: 'f/4 · motorlu zum', text: 'Sabit f/4 diyafram ve optik sabitleme. Yumuşak, motorlu zum hareketi.' },
+      { name: 'Canon EF 17-40 mm L USM', tag: 'f/4 · geniş açı zum', text: 'Canon’un L serisinden geniş açı zum. Mimari ve iç mekân kareleri için.' },
+    ],
+  },
+  {
+    id: 'hava',
+    title: 'Drone ve sabitleme',
+    lead: 'Havadan görüntü ve akıcı hareket.',
+    items: [
+      { name: 'DJI Air 3S', tag: 'Drone · çift kamera', text: '1 inç sensörlü ana kamera ve orta tele kamera. Aynı uçuşta hem geniş hem yakın plan.' },
+      { name: 'DJI RS 4', tag: 'Gimbal · 3 eksen', text: 'Aynasız ve sinema kameraları için el gimbali. Yürürken ve koşarken sarsıntısız plan.' },
+      { name: 'DJI Osmo Pocket 3', tag: 'Cep kamerası · 1 inç', text: '3 eksen gimballi küçük kamera. Kalabalıkta ve dar alanda göze batmadan çeker.' },
+    ],
+  },
+];
+
+let n = 0;
+const groups = GROUPS.map((g) => ({ ...g, items: g.items.map((s) => ({ ...s, no: pad2(++n) })) }));
+const tones = ['t-night', 't-ivory', 't-night'];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Çekim ekipmanı',
+  url: `${SITE.url}/ekipman/`,
+  itemListElement: groups.flatMap((g) => g.items).map((s, i) => ({ '@type': 'ListItem', position: i + 1, name: s.name })),
+};
+---
+
+<Base title="Ekipman: kameralar, lensler ve drone" description={description} crumbs={crumbs} schema={[schema]} serifAbove>
+  <PageHead
+    title="Ekipman"
+    sub="çantada ne var."
+    lead={`${n} parça, üç başlık. Hangisini götüreceğimizi çekimin ihtiyacına göre seçeriz.`}
+    crumbs={crumbs}
+  />
+
+  {
+    groups.map((g, gi) => (
+      <section class:list={['chap', tones[gi]]} id={g.id} aria-labelledby={`${g.id}-h`}>
+        <div class="wrap">
+          <div class="chap__hd">
+            <p class="alt-tag mono">
+              <b>{pad2(gi + 1)}</b> {g.items.length} parça
+            </p>
+            <h2 class="wide l" id={`${g.id}-h`}>
+              {g.title}
+            </h2>
+            <p class="lead">{g.lead}</p>
+          </div>
+          <dl class="rows">
+            {g.items.map((s) => (
+              <div class="row row--3 gear">
+                <span class="row__no mono" aria-hidden="true">
+                  {s.no}
+                </span>
+                <dt>
+                  {s.name}
+                  <span class="gear__tag mono">{s.tag}</span>
+                </dt>
+                <dd>{s.text}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+    ))
+  }
+  <section class="chap t-ivory" aria-labelledby="e-cta">
+    <div class="wrap">
+      <h2 class="serif l" id="e-cta">Çekiminize hangisi lazım?</h2>
+      <p class="copy" style="margin-top:1.25rem;max-width:46ch">
+        Ne çekmek istediğinizi yazın, ekipmanı ona göre hazırlayalım. Hizmetlerin tamamı <a href="/hizmetler/">hizmetler sayfasında</a>.
+      </p>
+      <a class="btn" style="margin-top:2rem" href="/iletisim/">Tarihinizi sorun <span class="arrow" aria-hidden="true">→</span></a>
+    </div>
+  </section>
+  <Ground />
+</Base>

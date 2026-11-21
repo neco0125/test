@@ -1,0 +1,106 @@
+---
+// Galerideki her video için ayrı izleme sayfası: Google videoyu sayfanın ana içeriği olarak görsün ve aramada önizlemeli göstersin.
+import { getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Ground from '../../components/Ground.astro';
+import { SITE } from '../../config';
+import { GALLERY, type GalleryVideo } from '../../data/gallery';
+import { UI } from '../../i18n';
+
+export function getStaticPaths() {
+  return GALLERY.map((g) => ({ params: { id: g.id }, props: { g } }));
+}
+interface Props {
+  g: GalleryVideo;
+}
+const { g } = Astro.props;
+const url = `/galeri/${g.id}/`;
+const crumbs = [
+  { name: 'Galeri', href: '/galeri/' },
+  { name: g.title.tr, href: url },
+];
+const src = g.src ?? g.pv;
+// Videosuz (yalnızca hareketli görsel) iş
+const still = !src && g.gif ? g.gif.replace(/\.gif$/, '.webp') : undefined;
+const poster = await getImage({ src: g.poster, width: g.vertical ? 720 : 1280, format: 'jpg', quality: 75 });
+const og = await getImage({ src: g.poster, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 75 });
+const secs = Number(g.len.split(':')[0]) * 60 + Number(g.len.split(':')[1]);
+const isDrone = g.tag.tr.startsWith('Drone');
+const service = isDrone ? { href: '/drone/', label: 'Drone çekimi' } : { href: '/hizmetler/', label: 'Hizmetlerimiz' };
+const others = GALLERY.filter((o) => o.id !== g.id);
+const text = `${g.alt.tr}. ${g.meta.tr}.`;
+const description = `${g.title.tr}: Alanya ve Antalya’da çektiğimiz işlerden bir video. ${text}`.slice(0, 158);
+
+const schema = still ? {
+  '@context': 'https://schema.org',
+  '@type': 'ImageObject',
+  '@id': `${SITE.url}${url}#gorsel`,
+  name: g.title.tr,
+  description: text,
+  contentUrl: new URL(still, SITE.url).href,
+  thumbnailUrl: new URL(poster.src, SITE.url).href,
+  inLanguage: 'tr',
+  creator: { '@id': `${SITE.url}/#isletme` },
+} : {
+  '@context': 'https://schema.org',
+  '@type': 'VideoObject',
+  '@id': `${SITE.url}${url}#video`,
+  name: g.title.tr,
+  description: text,
+  thumbnailUrl: new URL(poster.src, SITE.url).href,
+  contentUrl: new URL(src!, SITE.url).href,
+  uploadDate: '2026-11-12T12:00:00+03:00',
+  duration: `PT${secs}S`,
+  inLanguage: 'tr',
+  isFamilyFriendly: true,
+  publisher: { '@id': `${SITE.url}/#isletme` },
+};
+---
+
+<Base title={still ? g.title.tr : `${g.title.tr} (video)`} description={description} crumbs={crumbs} schema={[schema]} ogImage={og.src} ogImageAlt={g.alt.tr} alts={{ tr: url }} serifAbove>
+  <!-- İzleme sayfası: kısa başlık, video ilk ekranda ve sayfanın ana içeriği (Google video dizini bunu ister) -->
+  <section class="wrap watch-page" aria-labelledby="v-h">
+    <nav class="crumb mono" aria-label={UI.tr.crumb}>
+      <ol>
+        <li><a href="/">{UI.tr.home}</a></li>
+        <li><a href="/galeri/">Galeri</a></li>
+        <li><span aria-current="page">{g.title.tr}</span></li>
+      </ol>
+    </nav>
+    <h1 id="v-h" class="watch-page__h">{g.title.tr} <span class="serif">{g.tag.tr.toLowerCase()}.</span></h1>
+    {still ? (
+      <picture>
+        <source type="image/webp" srcset={still} />
+        <img class:list={['watch', { 'watch--v': g.vertical }]} src={g.gif} width={g.vertical ? 720 : 1280} height={g.vertical ? 1280 : 720} alt={g.alt.tr} decoding="async" fetchpriority="high" />
+      </picture>
+    ) : (
+    <video
+      class:list={['watch', { 'watch--v': g.vertical }]}
+      src={src}
+      poster={poster.src}
+      width={g.vertical ? 720 : 1280}
+      height={g.vertical ? 1280 : 720}
+      controls
+      playsinline
+      preload="metadata"
+      loop={!g.src}
+      muted={!g.sound}
+    ></video>
+    )}
+    <div class="copy" style="margin-top:1.5rem;max-width:60ch">
+      <p>{g.alt.tr}.</p>
+      <p class="mono">{g.meta.tr}</p>
+      <p>
+        Benzer bir çekim için <a href={service.href}>{service.label}</a> sayfasına bakabilir ya da <a href="/iletisim/">bize yazabilirsiniz</a>. Diğer
+        işler <a href="/galeri/">galeride</a>.
+      </p>
+    </div>
+    <nav aria-label="Diğer videolar" class="copy" style="margin-top:2rem">
+      <h2 class="mono" style="font-size:1rem">Diğer videolar</h2>
+      <ul>
+        {others.map((o) => <li><a href={`/galeri/${o.id}/`}>{o.title.tr}</a></li>)}
+      </ul>
+    </nav>
+  </section>
+  <Ground />
+</Base>

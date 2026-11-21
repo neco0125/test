@@ -1,0 +1,241 @@
+---
+// EN/RU ana sayfa: Türkçe ana sayfanın aynı düzeni, metinler src/data/i18n'den.
+import { getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Pic from '../components/Pic.astro';
+import Reel from '../components/Reel.astro';
+import WeddingDay from '../components/WeddingDay.astro';
+import Ground from '../components/Ground.astro';
+import { SITE, pad2, wa } from '../config';
+import { COORDS, PLACES, UI, r, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+import heroWide from '../assets/img/hero-gece.jpg';
+import heroSquare from '../assets/img/hero-gece-kare.jpg';
+import yacht from '../assets/img/yat-scope.jpg';
+import portrait from '../assets/img/necip-portre.jpg';
+
+interface Props {
+  lang: XLang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const h = t.home;
+const D = t.data;
+
+const srcset = async (src: typeof heroWide, widths: number[], format: 'avif' | 'webp', quality: number) =>
+  (await Promise.all(widths.map(async (w) => `${(await getImage({ src, width: w, format, quality })).src} ${w}w`))).join(', ');
+const [sqAvif, sqWebp, wdAvif, wdWebp, fallback] = await Promise.all([
+  srcset(heroSquare, [480, 720], 'avif', 46),
+  srcset(heroSquare, [480, 720], 'webp', 60),
+  srcset(heroWide, [960, 1280], 'avif', 46),
+  srcset(heroWide, [960, 1280], 'webp', 60),
+  getImage({ src: heroWide, width: 1280, format: 'jpg', quality: 70 }),
+]);
+const portraitMedia = '(max-aspect-ratio: 1/1), (max-width: 760px)';
+const home = `${SITE.url}${r('home', lang)}`;
+
+const business = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfessionalService',
+  '@id': `${SITE.url}/#isletme`,
+  name: SITE.name,
+  description: h.description,
+  url: home,
+  image: `${SITE.url}/og.jpg`,
+  logo: `${SITE.url}/apple-touch-icon.png`,
+  telephone: SITE.phoneE164,
+  address: { '@type': 'PostalAddress', addressLocality: SITE.locality, addressRegion: SITE.region, addressCountry: 'TR' },
+  geo: { '@type': 'GeoCoordinates', latitude: SITE.lat, longitude: SITE.lon },
+  areaServed: [
+    { '@type': 'City', name: 'Alanya' },
+    { '@type': 'City', name: 'Antalya' },
+  ],
+  knowsAbout: D.groups.flatMap((g) => g.items.map((s) => s.name)),
+  founder: { '@id': `${SITE.url}/hakkimizda/#necip` },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: t.services.h,
+    url: `${SITE.url}${r('services', lang)}`,
+    itemListElement: D.groups.map((g) => ({
+      '@type': 'OfferCatalog',
+      name: g.title,
+      itemListElement: g.items.map((s) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.name, description: s.text } })),
+    })),
+  },
+  openingHoursSpecification: [
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '09:00', closes: '20:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Saturday', opens: '09:00', closes: '18:00' },
+  ],
+  sameAs: [SITE.instagram, SITE.gbp],
+  hasMap: SITE.gbp,
+};
+const website = { '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${home}#site`, name: SITE.name, url: home, inLanguage: lang, publisher: { '@id': `${SITE.url}/#isletme` } };
+---
+
+<Base title={h.title} description={h.description} schema={[business, website]} fullTitle overlay altimeter serifAbove lang={lang}>
+  <link slot="preload" rel="preload" as="image" imagesrcset={sqAvif} imagesizes="100vh" type="image/avif" media={portraitMedia} fetchpriority="high" />
+
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="hero__media" data-hero data-l="/media/hero-1280.mp4" data-s="/media/hero-720.mp4">
+      <picture>
+        <source media={portraitMedia} type="image/avif" srcset={sqAvif} sizes="100vh" />
+        <source media={portraitMedia} type="image/webp" srcset={sqWebp} sizes="100vh" />
+        <source type="image/avif" srcset={wdAvif} sizes="100vw" />
+        <source type="image/webp" srcset={wdWebp} sizes="100vw" />
+        <img src={fallback.src} width="1280" height="720" alt={h.heroAlt} fetchpriority="high" loading="eager" decoding="async" />
+      </picture>
+    </div>
+    <div class="vf" aria-hidden="true">
+      <span class="tl rec">REC <span data-tc>00:00:00:00</span></span>
+      <span class="tr">ALT 120 m</span>
+      <span class="center"></span>
+      <span class="bl">{COORDS[lang]}</span>
+      <span class="br">Alanya · Antalya</span>
+    </div>
+    <div class="hero__body wrap">
+      <p class="hero__kicker mono">{h.kicker}</p>
+      <h1 class="hero__title" id="hero-h">
+        <span class="sr">{h.h1sr}</span>
+        <span class="ln"><span class="wide">{h.h1a}</span></span>
+        <span class="ln"><span class="serif">{h.h1b}</span></span>
+      </h1>
+      <div class="hero__foot">
+        <p class="hero__lead">{h.lead}</p>
+        <div class="cta-row">
+          <a class="btn" href={wa(UI[lang].waHello)} rel="noopener">{UI[lang].askDate} <span class="arrow" aria-hidden="true">→</span></a>
+          <a class="link" href="#air">{h.seeWork} <span class="arrow--down" style="display:inline-block" aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lenses" aria-label={`${h.lensDrone.go} · ${h.lensWed.go}`}>
+    <a class="lens lens--drone t-night" href={r('drone', lang)}>
+      <div class="lens__media">
+        {/* kart dikey, geniş fotoğraf yüksekliğe göre kaplanır: gösterilen genişlik ≈ kart yüksekliği × 2,39 */}
+        <Pic src={yacht} alt="" widths={[960, 1280, 1920, 2752]} sizes="(min-width: 56rem) max(50vw, clamp(81rem, 220vh, 139rem)), max(100vw, clamp(81rem, 220vh, 139rem))" avifQuality={48} webpQuality={68} />
+      </div>
+      <div class="lens__top mono"><span>{h.lensDrone.top}</span><span>ALT 120 m</span></div>
+      <h2 class="wide xl" style="font-size:clamp(3.25rem,1rem + 7.6vw,9rem)">{t.drone.h1a}</h2>
+      <p class="lens__sub serif">{h.lensDrone.sub}</p>
+      <span class="lens__go">{h.lensDrone.go} <span class="arrow" aria-hidden="true">→</span></span>
+    </a>
+    <a class="lens lens--wed t-ivory" href={r('wedding', lang)}>
+      <div class="lens__top mono"><span>{h.lensWed.top}</span><span>ALT 1,7 m</span></div>
+      <div>
+        <h2 class="serif lens__word">{h.lensWed.word}</h2>
+        <p class="lens__sub serif" style="margin-top:.6rem">{h.lensWed.sub}</p>
+        <ol class="lens__day mono">
+          {D.weddingDay.map((s) => <li>{s.name}</li>)}
+        </ol>
+        <span class="lens__go">{h.lensWed.go} <span class="arrow" aria-hidden="true">→</span></span>
+      </div>
+    </a>
+  </section>
+
+  <section class="chap t-teal" id="air" aria-labelledby="air-h">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 90 m</b> {h.air.tag}</p>
+        <h2 class="wide xl" id="air-h">{h.air.h}</h2>
+        <p class="lead">{h.air.lead}</p>
+      </div>
+      <Reel />
+      <div class="split" style="margin-top:clamp(3.5rem,8vw,6.5rem)">
+        <div>
+          <h3 class="wide m">{h.air.deliverH}</h3>
+          <a class="btn" style="margin-top:2rem" href={r('drone', lang)}>{h.air.btn} <span class="arrow" aria-hidden="true">→</span></a>
+        </div>
+        <dl class="kv">
+          {
+            D.droneDeliver.map((f) => (
+              <div>
+                <dt class="mono">{f.k}</dt>
+                <dd>{f.v}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" id="wedding" aria-labelledby="wed-h">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 1,7 m</b> {h.wed.tag}</p>
+        <h2 id="wed-h" style="display:grid">
+          <span class="serif l" style="font-size:clamp(3rem,1rem + 7.4vw,9.5rem)">{h.wed.h1}</span>
+          <span class="wide l" style="padding-left:clamp(1rem,8vw,9rem)">{h.wed.h2}</span>
+        </h2>
+        <p class="lead">{h.wed.lead}</p>
+      </div>
+
+      <p class="mono" style="margin-bottom:2.5rem">{h.wed.steps}</p>
+      <WeddingDay items={D.weddingDay} />
+
+      <div class="split" style="margin-top:clamp(4rem,9vw,7.5rem)">
+        <div>
+          <h3 class="wide m">{h.wed.receiveH}</h3>
+          <p class="copy" style="margin-top:1.25rem">{h.wed.receiveLead}</p>
+          <a class="btn" style="margin-top:2rem" href={r('wedding', lang)}>{h.wed.btn} <span class="arrow" aria-hidden="true">→</span></a>
+        </div>
+        <ol class="rows">
+          {
+            D.weddingReceive.map((x, i) => (
+              <li class="row row--3">
+                <span class="row__no mono">{pad2(i + 1)}</span>
+                <h4 class="row__name">{x.name}</h4>
+                <p>{x.text}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+
+      <div class="split" style="margin-top:clamp(4rem,9vw,7.5rem);padding-top:clamp(3rem,6vw,5rem);border-top:1px solid var(--rule)" role="region" aria-labelledby="other-h">
+        <div>
+          <p class="alt-tag mono"><b>ALT 1,7 m</b> {h.other.tag}</p>
+          <h2 class="serif" id="other-h" style="font-size:var(--t-serif-l);margin-top:1.25rem">{h.other.h}</h2>
+          <p class="copy" style="margin-top:1.25rem" set:html={h.other.copy} />
+        </div>
+        <ul class="rows">
+          {
+            D.otherServices.map((s, i) => (
+              <li>
+                <a class="row row--4" href={r(s.key, lang) + s.hash}>
+                  <span class="row__no mono">{pad2(i + 1)}</span>
+                  <span class="row__name">{s.name}</span>
+                  <p>{s.text}</p>
+                  <span class="arrow" aria-hidden="true">→</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chap t-night" aria-labelledby="me-h" style="padding-bottom:0">
+    <div class="wrap about">
+      <figure class="about__img">
+        <Pic src={portrait} widths={[400, 640, 960]} sizes="(min-width: 56rem) 38vw, 92vw" alt={h.portraitAlt} />
+      </figure>
+      <div class="about__txt">
+        <p class="alt-tag mono"><b>ALT 0,5 m</b> {h.about.tag}</p>
+        <h2 class="serif" id="me-h" style="margin-top:1.5rem">{h.about.h}</h2>
+        <p class="lead" style="margin-top:1.5rem;max-width:30ch">{h.about.lead}</p>
+        <p class="copy" style="margin-top:1.25rem">{h.about.copy}</p>
+        <p class="copy" style="margin-top:1rem">{t.common.languageNote}</p>
+        <div class="about__stats mono">
+          <span><b>{PLACES[lang][0]}</b>{PLACES[lang][1]}</span>
+          <span><b>50/60</b>fps drone</span>
+        </div>
+        <a class="link" style="display:inline-block;margin-top:2rem" href={r('about', lang)}>{h.about.link} <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <Ground lang={lang} />
+</Base>

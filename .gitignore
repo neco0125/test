@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+.claude/
+*.log
+.env
+.env.*
+SEO-RAPOR.md
+docs/

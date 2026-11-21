@@ -1,0 +1,153 @@
+---
+import Base from '../layouts/Base.astro';
+import Pic from '../components/Pic.astro';
+import Reel from '../components/Reel.astro';
+import Faq from '../components/Faq.astro';
+import Ground from '../components/Ground.astro';
+import { SITE, pad2, wa } from '../config';
+import { UI, r, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+import yacht from '../assets/img/yat-drone.jpg';
+
+interface Props {
+  lang: XLang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const p = t.drone;
+const D = t.data;
+const url = r('drone', lang);
+const crumbs = [{ name: p.crumb, href: url }];
+
+const service = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: p.h1sr.replace(/:\s*$/, ''),
+  serviceType: p.serviceType,
+  description: p.description,
+  areaServed: [
+    { '@type': 'City', name: 'Alanya' },
+    { '@type': 'City', name: 'Antalya' },
+  ],
+  provider: { '@id': `${SITE.url}/#isletme`, '@type': 'ProfessionalService', name: SITE.name, telephone: SITE.phoneE164 },
+  url: `${SITE.url}${url}`,
+};
+const faq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: D.droneFaq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base title={p.title} description={p.description} crumbs={crumbs} schema={[service, faq]} overlay altimeter serifAbove lang={lang}>
+  <section class="phero phero--boat t-night" aria-labelledby="d-h">
+    <div class="phero__img">
+      <Pic src={yacht} widths={[960, 1440, 1920, 2752]} sizes="max(100vw, min(179vh, 111rem))" avifQuality={54} webpQuality={72} alt={p.imgAlt} eager />
+    </div>
+    <div class="phero__body wrap">
+      <nav class="crumb mono" aria-label={UI[lang].crumb}>
+        <ol><li><a href={r('home', lang)}>{UI[lang].home}</a></li><li><span aria-current="page">{p.crumb}</span></li></ol>
+      </nav>
+      <h1 id="d-h">
+        <span class="sr">{p.h1sr}</span>
+        <span class="wide xl">{p.h1a}</span>
+        <span class="serif">{p.h1b}</span>
+      </h1>
+      <p class="lead">{p.lead}</p>
+      <div class="cta-row">
+        <a class="btn" href={wa(p.waCta)} rel="noopener">{p.cta} <span class="arrow" aria-hidden="true">→</span></a>
+        <a class="link" href="#reel">{p.clips}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="chap t-teal" id="reel" aria-labelledby="m-h">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 90 m</b> {p.reelTag}</p>
+        <h2 class="wide l" id="m-h">{p.reelH}</h2>
+        <p class="lead">{p.reelLead}</p>
+      </div>
+      <Reel schema />
+    </div>
+  </section>
+
+  <section class="chap t-night" aria-labelledby="u-h">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 60 m</b> {p.usesTag}</p>
+        <h2 class="wide l" id="u-h">{p.usesH}</h2>
+      </div>
+      <ul class="rows">
+        {
+          D.droneUses.map((u, i) => (
+            <li class="row">
+              <span class="row__no mono">{pad2(i + 1)}</span>
+              <h3>{u.name}</h3>
+              <p>{u.text}</p>
+              <a class="row__go" href={wa(t.common.waQuote(`${p.crumb.toLowerCase()} · ${u.name}`))} rel="noopener">
+                {t.common.getQuote}<span class="sr">: {u.name}</span> <span class="arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="chap t-night" aria-labelledby="t-h" style="padding-top:0">
+    <div class="wrap split">
+      <div>
+        <p class="alt-tag mono"><b>ALT 40 m</b> {p.deliverTag}</p>
+        <h2 class="wide m" id="t-h" style="margin-top:1.25rem">{p.deliverH}</h2>
+      </div>
+      <dl class="kv">
+        {
+          D.droneDeliver.map((f) => (
+            <div>
+              <dt class="mono">{f.k}</dt>
+              <dd>{f.v}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" aria-labelledby="s-h">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 20 m</b> {p.processTag}</p>
+        <h2 id="s-h" style="display:grid">
+          <span class="wide l">{p.processA}</span>
+          <span class="serif l" style="padding-left:clamp(1rem,8vw,9rem)">{p.processB}</span>
+        </h2>
+      </div>
+      <ol class="steps">
+        {
+          D.droneProcess.map((s) => (
+            <li>
+              <b>{s.name}</b>
+              <p>{s.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" aria-labelledby="f-h" style="padding-top:0">
+    <div class="wrap split" style="padding-top:clamp(3rem,6vw,5rem);border-top:1px solid var(--rule)">
+      <div>
+        <p class="alt-tag mono"><b>ALT 5 m</b> {t.common.faqTitle}</p>
+        <h2 class="serif l" id="f-h" style="margin-top:1.25rem">{t.common.faqH}</h2>
+      </div>
+      <div>
+        <Faq items={D.droneFaq} />
+        <p class="copy" style="margin-top:1.25rem">{t.common.languageNote}</p>
+      </div>
+    </div>
+  </section>
+
+  <Ground lang={lang} waText={p.waCta} />
+</Base>

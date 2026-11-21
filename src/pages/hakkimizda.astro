@@ -1,0 +1,122 @@
+---
+import { getImage } from 'astro:assets';
+import Pic from '../components/Pic.astro';
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Ground from '../components/Ground.astro';
+import Team from '../components/Team.astro';
+import yusufPhoto from '../assets/img/yusuf-balkan.jpg';
+import { SITE, pad2 } from '../config';
+import portrait from '../assets/img/necip-portre.jpg';
+
+const crumbs = [{ name: 'Hakkımızda', href: '/hakkimizda/' }];
+const description =
+  'Necip Bozdemir Alanya’da drone, düğün, sosyal medya ve kurumsal video çekiyor, Antalya’da da çalışıyor. Nasıl çalıştığımız ve altı çalışma ilkemiz.';
+
+const PRINCIPLES = [
+  { name: 'Ekipman', text: 'Lensi ve ekipmanı çekimin ihtiyacına göre seçeriz. Drone görüntüsünü 50 ya da 60 fps çekeriz, ağır çekime izin verir.', href: '/ekipman/', link: 'Ekipman listesi' },
+  { name: 'Zamanında teslim', text: 'Teslim tarihi sözleşmede yazar. Gecikme ihtimaline karşı telafi planı baştan belirlenir.' },
+  { name: 'Hikâye odaklı çekim', text: 'Zorla poz verdirmeyiz, doğal anı bekleriz. Çektiğimiz her kare günün anlatısına hizmet etmeli.' },
+  { name: 'Şeffaf iletişim', text: 'Teklif, sözleşme, onay ve revizyon yazılı yürür ve kayıt altında kalır. Sonradan sürpriz çıkmaz.' },
+  { name: 'Post-prodüksiyon', text: 'Renk düzenleme, rötuş ve ses miksajı teslim ettiğimiz işin parçasıdır.' },
+  { name: 'Yerel bilgi', text: 'Alanya ve Antalya’nın lokasyonlarını, ışık saatlerini ve mekânlarını iyi biliriz.' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: 'Hakkımızda',
+  url: `${SITE.url}/hakkimizda/`,
+  about: { '@id': `${SITE.url}/#isletme` },
+  mainEntity: { '@id': `${SITE.url}/hakkimizda/#necip` },
+};
+const portraitImg = await getImage({ src: portrait, width: 800, format: 'jpg', quality: 75 });
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  '@id': `${SITE.url}/hakkimizda/#necip`,
+  name: SITE.name,
+  jobTitle: 'Fotoğrafçı ve videograf',
+  url: `${SITE.url}/hakkimizda/`,
+  image: new URL(portraitImg.src, SITE.url).href,
+  worksFor: { '@id': `${SITE.url}/#isletme` },
+  homeLocation: { '@type': 'City', name: 'Alanya' },
+  knowsAbout: ['Drone çekimi', 'Düğün fotoğrafçılığı', 'Düğün videosu', 'Tanıtım filmi', 'Instagram Reels'],
+  sameAs: [SITE.instagram],
+};
+const yusufImg = await getImage({ src: yusufPhoto, width: 400, format: 'jpg', quality: 80 });
+const yusuf = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  '@id': `${SITE.url}/hakkimizda/#yusuf`,
+  name: 'Yusuf Balkan',
+  jobTitle: 'Fotoğraf ve video',
+  url: `${SITE.url}/hakkimizda/#ekip`,
+  image: new URL(yusufImg.src, SITE.url).href,
+  worksFor: { '@id': `${SITE.url}/#isletme` },
+};
+---
+
+<Base title="Hakkımızda: Alanya’da fotoğraf ve video" description={description} crumbs={crumbs} schema={[schema, person, yusuf]} serifAbove>
+  <PageHead title="Hakkımızda" sub="kameranın arkası." crumbs={crumbs} />
+
+  <section class="chap t-night" aria-labelledby="a1" style="padding-top:0">
+    <div class="wrap about">
+      <figure class="about__img">
+        <Pic
+          src={portrait}
+          widths={[400, 640, 960]}
+          sizes="(min-width: 56rem) 38vw, 92vw"
+          alt="Necip Bozdemir sahnede, elindeki kamera düzeneğinin ekranına bakıyor"
+          eager
+        />
+      </figure>
+      <div class="about__txt">
+        <h2 class="serif" id="a1">Ben Necip.</h2>
+        <p class="lead" style="margin-top:1.5rem;max-width:32ch">
+          Alanya ve Antalya’da drone, düğün, sosyal medya ve kurumsal video işi yapıyoruz.
+        </p>
+        <div class="copy" style="margin-top:1.25rem">
+          <p>
+            Doğal ışıkla çalışmayı ve sade kadrajı seviyoruz. Çekimde günü olduğu gibi anlatmaya bakarız. Ne çekileceği, ne zaman teslim edileceği ve kaça
+            mal olacağı baştan yazılı olarak bellidir.
+          </p>
+        </div>
+        <div class="about__stats mono">
+          <span><b>Alanya</b>Antalya</span>
+          <span><b>50/60</b>fps drone</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Team />
+
+  <section class="chap t-ivory" aria-labelledby="a2">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>06</b> İlke</p>
+        <h2 id="a2" style="display:grid">
+          <span class="wide l">Nasıl</span>
+          <span class="serif l" style="padding-left:clamp(1rem,8vw,9rem)">çalışıyoruz.</span>
+        </h2>
+      </div>
+      <dl class="rows">
+        {
+          PRINCIPLES.map((p, i) => (
+            <div class="row row--3">
+              <span class="row__no mono" aria-hidden="true">
+                {pad2(i + 1)}
+              </span>
+              <dt>{p.name}</dt>
+              <dd>
+                {p.text} {p.href && <a href={p.href}>{p.link}</a>}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+  <Ground />
+</Base>

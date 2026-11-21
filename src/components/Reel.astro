@@ -1,0 +1,91 @@
+---
+// Dört drone klibi: büyük 16:9 sahne + zaman kodlu sekmeler. Video yalnızca "Oynat"a basılınca iner.
+import { getImage } from 'astro:assets';
+import { SITE, pad2 } from '../config';
+import { langOf, type XLang } from '../i18n';
+
+interface Props {
+  /** VideoObject JSON-LD yazılsın (yalnızca bir sayfada: /drone/) */
+  schema?: boolean;
+}
+const { schema = false } = Astro.props;
+import posterOtel from '../assets/img/poster-otel.jpg';
+import posterHam from '../assets/img/poster-ham.jpg';
+import posterKurgu from '../assets/img/poster-kurgu.jpg';
+import posterKonser from '../assets/img/poster-konser.jpg';
+
+// Tüm çekimler 4K (site sahibinin teyidi, 12.11.2026); sitedeki kopyalar hız için 720p
+const lang = langOf(Astro.url.pathname);
+const T = {
+  tr: { play: 'Oynat', clips: 'Klipler', ld: 'Alanya drone çekimi', note: 'İkinci klip drone’dan çıktığı gibi duran ham görüntü, üçüncüsü rengi düzenlenmiş bir kurgu. İkisi ayrı çekimlerden. Çekimden sonra masada ne yapıldığı görülsün diye yan yana koyduk. Hepsi 4K çekildi. Sayfa hızlı açılsın diye sitede 720p ve sessiz oynarlar.' },
+  en: { play: 'Play', clips: 'Clips', ld: 'Alanya drone videography', note: 'The second clip is raw footage straight from the drone, the third is a colour-graded edit. They come from different shoots; we put them side by side to show what happens in post-production. All were shot in 4K; on the site they play in 720p without sound so the page loads fast.' },
+  uk: { play: 'Дивитися', clips: 'Ролики', ld: 'Зйомка з дрона в Аланії', note: 'Другий ролик — вихідне відео просто з дрона, третій — монтаж із кольорокорекцією. Це різні зйомки: ми поставили їх поруч, щоб було видно, що дає постобробка. Усе знято в 4K, а на сайті ролики йдуть у 720p без звуку, щоб сторінка швидко відкривалася.' },
+  ru: { play: 'Смотреть', clips: 'Ролики', ld: 'Съёмка с дрона в Алании', note: 'Второй ролик — исходник прямо с дрона, третий — монтаж с цветокоррекцией. Это разные съёмки: мы поставили их рядом, чтобы было видно, что даёт постобработка. Всё снято в 4K, а на сайте ролики идут в 720p без звука, чтобы страница быстро открывалась.' },
+}[lang];
+const TX: Record<string, Record<XLang, [string, string, string]>> = {
+  otel: { en: ['Hotel', 'Shot in 4K', 'Aerial view of a hotel with a pool on the seafront'], ru: ['Отель', 'Снято в 4K', 'Отель с бассейном на берегу моря, вид сверху'], uk: ['Готель', 'Знято в 4K', 'Готель з басейном на березі моря, вигляд згори'] },
+  ham: { en: ['Raw footage', 'Shot in 4K · ungraded', 'A crowded event ground at night, seen from directly above'], ru: ['Исходник', 'Снято в 4K · без обработки', 'Многолюдная площадка ночью, вид строго сверху'], uk: ['Вихідне відео', 'Знято в 4K · без обробки', 'Людний майданчик уночі, вигляд строго згори'] },
+  konser: { en: ['Concert', 'Drone · night', 'A drone moving towards a concert stage lit with blue beams, over a crowd holding up phone lights at night'], ru: ['Концерт', 'Дрон · ночь', 'Ночью дрон приближается к концертной сцене в синих лучах над толпой с поднятыми телефонами'], uk: ['Концерт', 'Дрон · ніч', 'Уночі дрон наближається до концертної сцени в синіх променях над натовпом із піднятими телефонами'] },
+  kurgu: { en: ['Edit', 'Shot in 4K · colour-graded', 'A Turkish flag waving over a pine forest with the sea behind'], ru: ['Монтаж', 'Снято в 4K · цветокоррекция', 'Турецкий флаг над сосновым лесом, позади море'], uk: ['Монтаж', 'Знято в 4K · кольорокорекція', 'Турецький прапор над сосновим лісом, позаду море'] },
+};
+const CLIPS_TR = [
+  { id: 'otel', name: 'Otel', len: '00:14', meta: '4K çekim', pv: '/media/otel-dongu.mp4', poster: posterOtel, alt: 'Deniz kıyısında havuzlu bir otelin havadan görünümü' },
+  { id: 'ham', name: 'Ham görüntü', len: '00:27', meta: '4K çekim · işlenmemiş', poster: posterHam, alt: 'Gece, kalabalık bir etkinlik alanının tam üstten görünümü' },
+  { id: 'kurgu', name: 'Kurgu', len: '00:12', meta: '4K çekim · renk düzenlenmiş', poster: posterKurgu, alt: 'Çam ormanının üstünde dalgalanan Türk bayrağı, arkada deniz' },
+  { id: 'konser', name: 'Konser', len: '00:07', meta: 'Drone · gece', poster: posterKonser, alt: 'Gece, telefon ışıklarını kaldırmış kalabalığın üstünden mavi ışınlarla aydınlanan konser sahnesine yaklaşan drone' },
+];
+const CLIPS = CLIPS_TR.map((c) => (lang === 'tr' ? c : { ...c, name: TX[c.id][lang][0], meta: TX[c.id][lang][1], alt: TX[c.id][lang][2] }));
+const clips = await Promise.all(
+  CLIPS.map(async (c) => {
+    // 720: telefonda (412 px, 1,75x) sahne ~660 piksel; 640 küçük, 960 büyük kalıyordu
+    const ws = [480, 720, 960, 1280];
+    const imgs = await Promise.all(ws.map((width) => getImage({ src: c.poster, width, format: 'avif', quality: 42 })));
+    return { ...c, src: imgs[2].src, srcset: imgs.map((im, i) => `${im.src} ${ws[i]}w`).join(', ') };
+  }),
+);
+const first = clips[0];
+const ld = schema
+  ? await Promise.all(
+      CLIPS.map(async (c) => ({
+        '@context': 'https://schema.org',
+        '@type': 'VideoObject',
+        name: `${T.ld}: ${c.name.toLowerCase()}`,
+        description: `${c.alt}. ${c.meta}.`,
+        thumbnailUrl: new URL((await getImage({ src: c.poster, width: 1280, format: 'jpg', quality: 72 })).src, SITE.url).href,
+        contentUrl: `${SITE.url}/media/${c.id}.mp4`,
+        uploadDate: '2026-11-12T12:00:00+03:00',
+        duration: `PT${Number(c.len.split(':')[1])}S`,
+        inLanguage: lang,
+        publisher: { '@id': `${SITE.url}/#isletme` },
+      })),
+    )
+  : [];
+const SIZES = '(min-width: 92rem) 1040px, (min-width: 56rem) 72vw, calc(100vw - 36px)';
+---
+
+{ld.length > 0 && <script type="application/ld+json" set:html={JSON.stringify(ld)} />}
+<div class="reel">
+  <div class="stage" data-stage>
+    <img src={first.src} srcset={first.srcset} sizes={SIZES} width="1280" height="720" alt={first.alt} loading="lazy" decoding="async" />
+    {/* pv: seçili klibin sessiz kısa döngüsü, sahnede kapak resminin üstünde oynar (şimdilik yalnızca otel) */}
+    <a class="stage__play case__a" href={`/media/${first.id}.mp4`} data-play data-pv={first.pv}>
+      {/* büyük "Oynat" butonu yok: sahnenin tamamı tıklanır, köşede yalnızca küçük ▶ ve süre */}
+      <span class="stage__chip mono"><span class="tri" aria-hidden="true"></span><span class="sr">{T.play}</span> <span data-len>{first.len}</span></span>
+    </a>
+  </div>
+  <ol class="tabs" aria-label={T.clips}>
+    {
+      clips.map((c, i) => (
+        <li>
+          <a class="tab" href={`/media/${c.id}.mp4`} data-clip data-src={c.src} data-srcset={c.srcset} data-alt={c.alt} data-len={c.len} data-loop={c.pv} aria-current={i === 0 ? 'true' : undefined}>
+            <span class="tab__no mono">{pad2(i + 1)}</span>
+            <span class="tab__name">{c.name}</span>
+            <span class="mono">{c.len}</span>
+            <span class="tab__meta mono">{c.meta}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+  <p class="reel__note copy">{T.note}</p>
+</div>

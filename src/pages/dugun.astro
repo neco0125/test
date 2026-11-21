@@ -1,0 +1,127 @@
+---
+import Base from '../layouts/Base.astro';
+import HeroSlides from '../components/HeroSlides.astro';
+import HeroPreload from '../components/HeroPreload.astro';
+import WeddingDay from '../components/WeddingDay.astro';
+import WeddingGallery from '../components/WeddingGallery.astro';
+import Faq from '../components/Faq.astro';
+import Ground from '../components/Ground.astro';
+import { SITE, pad2, wa } from '../config';
+import { WEDDING_EXTRAS, WEDDING_FAQ, WEDDING_RECEIVE } from '../data/content';
+import { WEDDING_SLIDES } from '../data/btsSlides';
+
+const title = 'Alanya düğün fotoğrafçısı ve düğün videosu';
+const description =
+  'Alanya ve Antalya’da düğün fotoğrafı, 2-3 saatlik düğün filmi ve 1-3 dakikalık klip. Tam gün çekim, ayrı ses kaydı, Save the Date, nişan, kına ve drone.';
+const crumbs = [{ name: 'Düğün', href: '/dugun/' }];
+const slides = WEDDING_SLIDES('tr');
+
+const service = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Düğün fotoğrafçılığı ve düğün filmi',
+  serviceType: 'Düğün fotoğrafı ve videosu',
+  description,
+  areaServed: [
+    { '@type': 'City', name: 'Alanya' },
+    { '@type': 'City', name: 'Antalya' },
+  ],
+  provider: { '@id': `${SITE.url}/#isletme`, '@type': 'ProfessionalService', name: SITE.name, telephone: SITE.phoneE164 },
+  url: `${SITE.url}/dugun/`,
+};
+const faq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: WEDDING_FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base title={title} description={description} crumbs={crumbs} schema={[service, faq]} theme="ivory" altimeter serifAbove overlay>
+  <HeroPreload slot="preload" src={slides[0].src} />
+  <section class="phero phero--w t-night" aria-labelledby="w-h">
+    <HeroSlides slides={slides} />
+    <div class="phero__body wrap">
+      <h1 id="w-h">
+        <span class="sr">Alanya düğün fotoğrafçısı ve düğün videosu: </span>
+        <span class="wide xl">Düğün</span>
+        <span class="serif">yakından.</span>
+      </h1>
+      <p class="lead">Alanya ve Antalya’da düğün fotoğrafı, düğün filmi ve klip.</p>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" id="gun" aria-labelledby="g-h" style="border-top:1px solid var(--rule)">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 1,7 m</b> Gün</p>
+        <h2 id="g-h" style="display:grid">
+          <span class="serif l">Düğün gününüz</span>
+          <span class="wide l" style="padding-left:clamp(1rem,8vw,9rem)">adım adım.</span>
+        </h2>
+        <p class="lead">Saatleri sizin programınız belirler. Biz sırayı biliriz: hazırlıktan teslime yedi durak.</p>
+      </div>
+      <WeddingDay />
+      <WeddingGallery />
+    </div>
+  </section>
+
+  <section class="chap t-night" aria-labelledby="r-h">
+    <div class="wrap split">
+      <div>
+        <p class="alt-tag mono"><b>ALT 1,2 m</b> Teslim</p>
+        <h2 class="wide m" id="r-h" style="margin-top:1.25rem">Ne alırsınız</h2>
+        <p class="copy" style="margin-top:1.25rem">Hazır paket yok. Teklifi düğününüzün süresine, yerine ve istediğiniz teslime göre hazırlıyoruz.</p>
+      </div>
+      <ol class="rows">
+        {
+          WEDDING_RECEIVE.map((r, i) => (
+            <li class="row row--3">
+              <span class="row__no mono">{pad2(i + 1)}</span>
+              <h3>{r.name}</h3>
+              <p>{r.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="chap t-teal" aria-labelledby="e-h">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 1 m</b> Düğünden önce ve çevresinde</p>
+        <h2 id="e-h" style="display:grid">
+          <span class="wide l">Save the Date</span>
+          <span class="serif l" style="padding-left:clamp(1rem,8vw,9rem)">ile nişan, söz ve kına.</span>
+        </h2>
+      </div>
+      <ul class="rows">
+        {
+          WEDDING_EXTRAS.map((s, i) => (
+            <li class="row">
+              <span class="row__no mono">{pad2(i + 1)}</span>
+              <h3>{s.name}</h3>
+              <p>{s.text}</p>
+              <a class="row__go" href={wa(`Merhaba, ${s.ask} için teklif almak istiyorum.`)} rel="noopener">
+                Teklif al<span class="sr">: {s.name}</span> <span class="arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" aria-labelledby="f-h">
+    <div class="wrap split">
+      <div>
+        <p class="alt-tag mono"><b>ALT 0,5 m</b> Sorular</p>
+        <h2 class="serif l" id="f-h" style="margin-top:1.25rem">Sık sorulanlar</h2>
+        <p class="copy" style="margin-top:1.25rem">Klip ile film farkı <a href="/blog/dugun-klibi-mi-dugun-filmi-mi/">bu yazıda</a>, ay ay gün batımı saatleri ve örnek düğün akışı <a href="/blog/alanya-gun-batimi-saatleri/">burada</a>. Günü saat saat planlamak için <a href="/blog/dugun-gunu-akisi/">düğün günü akışı</a>, yer seçimi için <a href="/blog/alanya-dugun-mekanlari/">Alanya düğün mekânları</a> ve <a href="/blog/alanya-dis-cekim-mekanlari/">dış çekim mekânları</a>. Diğer notlar <a href="/blog/">blogda</a>.</p>
+      </div>
+      <Faq items={WEDDING_FAQ} />
+    </div>
+  </section>
+
+  <Ground waText="Merhaba, düğün tarihimiz için bilgi almak istiyorum." />
+</Base>

@@ -1,0 +1,31 @@
+---
+// Asimetrik düğün galerisi. src/assets/dugun/ boşken hiçbir şey çizmez.
+import Pic from './Pic.astro';
+import { weddingGallery } from '../data/weddingGallery';
+
+interface Props {
+  limit?: number;
+}
+const { limit } = Astro.props;
+const items = limit ? weddingGallery.slice(0, limit) : weddingGallery;
+const sizes = { landscape: '(min-width: 48rem) 64vw, 92vw', portrait: '(min-width: 48rem) 31vw, 92vw', square: '(min-width: 48rem) 31vw, 92vw' };
+---
+
+{
+  items.length > 0 && (
+    <div class="gal">
+      {items.map((it) => (
+        <figure class={it.shape}>
+          {it.video ? (
+            <a href={it.video} data-inline aria-label={`Videoyu oynat: ${it.alt}`}>
+              <Pic src={it.src} alt={it.alt} widths={[480, 800, 1200, 1600]} sizes={sizes[it.shape]} />
+              <span class="playtag mono">Oynat</span>
+            </a>
+          ) : (
+            <Pic src={it.src} alt={it.alt} widths={[480, 800, 1200, 1600]} sizes={sizes[it.shape]} />
+          )}
+        </figure>
+      ))}
+    </div>
+  )
+}

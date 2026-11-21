@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import { NAV, pad2 } from '../config';
+---
+
+<Base title="Sayfa bulunamadı" description="Aradığınız sayfa bu adreste yok. Adres değişmiş ya da yanlış yazılmış olabilir." noindex serifAbove>
+  <div class="page-hd wrap grid">
+    <p class="crumb alt-tag mono"><b>Hata 404</b> Sinyal yok</p>
+    <h1>
+      <span class="wide xl">Kayıp</span>
+      <span class="serif">bu kare yok.</span>
+    </h1>
+    <p class="lead">Adres değişmiş ya da yanlış yazılmış olabilir. Aşağıdaki sayfalardan devam edebilirsiniz.</p>
+  </div>
+  <div class="wrap" style="padding-bottom:var(--sec)">
+    <ul class="rows">
+      <li><a class="row row--nav" href="/"><span class="row__no mono">00</span><span class="row__name">Ana sayfa</span><span class="arrow" aria-hidden="true">→</span></a></li>
+      {
+        NAV.map((n, i) => (
+          <li>
+            <a class="row row--nav" href={n.href}>
+              <span class="row__no mono">{pad2(i + 1)}</span>
+              <span class="row__name">{n.label}</span>
+              <span class="arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Base>

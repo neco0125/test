@@ -1,0 +1,157 @@
+---
+// EN/RU/UK blog yazısı. Türkçe şablonla (src/pages/blog/[slug].astro) aynı düzen.
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Pic from '../components/Pic.astro';
+import { SITE, isoDate, wa } from '../config';
+import { UI, fmtDate, r, type Alts, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+
+import { blogAlts } from '../lib/blogAlts';
+
+type Post = CollectionEntry<'blogEn'> | CollectionEntry<'blogRu'> | CollectionEntry<'blogUk'>;
+interface Props {
+  lang: XLang;
+  post: Post;
+  all: Post[];
+}
+const { lang, post, all } = Astro.props;
+const t = COPY[lang];
+const base = r('blog', lang);
+const { Content } = await render(post);
+const { title, description, date, updated, category, readingTime, cta, waText, cover, coverAlt, related, translationKey } = post.data;
+const path = `${base}${post.id}/`;
+const url = `${SITE.url}${path}`;
+const modified = updated ?? date;
+const crumbs = [
+  { name: t.blog.crumb, href: base },
+  { name: title, href: path },
+];
+
+// Diğer dillerdeki karşılıklar: aynı translationKey (Türkçede slug'ın kendisi)
+const alts: Alts = await blogAlts(translationKey);
+
+const og = cover ? await getImage({ src: cover, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 72 }) : undefined;
+
+const plain = (s: string) =>
+  s
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/[*_`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+const faqBlock = (post.body ?? '').split(/^## (?:FAQ|Frequently asked questions|Частые вопросы|Часті запитання)\s*$/m)[1]?.split(/^## /m)[0] ?? '';
+const faq = faqBlock
+  .split(/^### /m)
+  .slice(1)
+  .map((chunk) => {
+    const [q, ...rest] = chunk.split('\n');
+    const a = rest.join('\n').trim().split(/\n\s*\n/)[0] ?? '';
+    return { q: plain(q), a: plain(a) };
+  })
+  .filter((f) => f.q && f.a);
+
+const others = all.filter((x) => x.id !== post.id).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const picks = [
+  ...(related ?? []).map((id) => others.find((x) => x.id === id)).filter((x) => x !== undefined),
+  ...others.filter((x) => x.data.category === category),
+  ...others,
+].filter((x, i, arr) => arr.findIndex((y) => y.id === x.id) === i).slice(0, 3);
+
+const schema: Record<string, unknown>[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: title,
+    description,
+    datePublished: isoDate(date),
+    dateModified: isoDate(modified),
+    inLanguage: lang,
+    articleSection: category,
+    mainEntityOfPage: url,
+    image: og ? new URL(og.src, SITE.url).href : `${SITE.url}/og.jpg`,
+    author: { '@type': 'Person', '@id': `${SITE.url}/hakkimizda/#necip`, name: SITE.name, url: `${SITE.url}${r('about', lang)}` },
+    publisher: { '@id': `${SITE.url}/#isletme`, '@type': 'Organization', name: SITE.name, url: `${SITE.url}/` },
+  },
+];
+if (faq.length)
+  schema.push({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  });
+---
+
+<Base
+  title={title}
+  description={description}
+  crumbs={crumbs}
+  schema={schema}
+  ogType="article"
+  ogImage={og?.src}
+  ogImageAlt={cover ? coverAlt : undefined}
+  theme="ivory"
+  lang={lang}
+  alts={alts}
+>
+  <meta slot="head" property="article:published_time" content={isoDate(date)} />
+  <meta slot="head" property="article:modified_time" content={isoDate(modified)} />
+  <article>
+    <header class="page-hd post-hd wrap grid">
+      <nav class="crumb mono" aria-label={UI[lang].crumb}>
+        <ol>
+          <li><a href={r('home', lang)}>{UI[lang].home}</a></li>
+          <li><a href={base}>{t.blog.crumb}</a></li>
+          <li><span aria-current="page">{category}</span></li>
+        </ol>
+      </nav>
+      <h1>{title}</h1>
+      <p class="post-hd__meta mono">
+        <span><span class="dot"></span>{category}</span>
+        <time datetime={isoDate(date)}>{fmtDate(date, lang)}</time>
+        {updated && <span>{t.common.updated}: <time datetime={isoDate(updated)}>{fmtDate(updated, lang)}</time></span>}
+        <span>{readingTime} {t.common.minRead}</span>
+        <span>{t.common.by}: <a href={r('about', lang)}>Necip Bozdemir</a></span>
+      </p>
+    </header>
+
+    <div class="wrap article">
+      <p class="article__side mono"><a href={base}>{t.common.allPosts}</a></p>
+      <div class="article__main">
+        {
+          cover && (
+            <figure class="post-cover">
+              <Pic src={cover} alt={coverAlt ?? ''} widths={[480, 800, 1200]} sizes="(min-width: 56rem) 46rem, 92vw" eager />
+            </figure>
+          )
+        }
+        <div class="prose">
+          <Content />
+        </div>
+        <aside class="endcta" aria-label={t.common.getQuote}>
+          <p>{cta}</p>
+          <div class="cta-row">
+            <a class="btn" href={wa(waText)} rel="noopener">{t.common.writeUs} <span class="arrow" aria-hidden="true">→</span></a>
+            <a class="link" href={`${r('contact', lang)}#form`}>{t.common.quoteForm}</a>
+          </div>
+        </aside>
+        {
+          picks.length > 0 && (
+            <nav class="related" aria-labelledby="rel-h">
+              <h2 class="related__h mono" id="rel-h">{t.common.related}</h2>
+              <ul>
+                {picks.map((x) => (
+                  <li>
+                    <a href={`${base}${x.id}/`}>{x.data.title}</a>
+                    <span class="mono">{x.data.category}</span>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )
+        }
+        <p class="printurl mono">{url} · {SITE.phoneDisplay}</p>
+      </div>
+    </div>
+  </article>
+</Base>

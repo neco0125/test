@@ -1,0 +1,50 @@
+---
+// Kapanış: altimetre burada 0 m'ye iner.
+import { SITE, wa } from '../config';
+import { COORDS, HOURS, UI, langOf, r, type Lang } from '../i18n';
+
+interface Props {
+  /** WhatsApp'a düşecek hazır mesaj */
+  waText?: string;
+  lang?: Lang;
+}
+const lang = Astro.props.lang ?? langOf(Astro.url.pathname);
+const { waText = UI[lang].waHello } = Astro.props;
+const T = {
+  tr: { tag: 'Yer', h1: 'Yere indik.', h2: 'Sıra sizin gününüzde.', form: 'Teklif formu', where: 'Konum', place: 'Alanya, Antalya', hours: 'Saatler', call: 'Ön görüşme', free: 'Ücretsiz. Tarihi, yeri ve istediğiniz işi yazmanız yeterli.' },
+  en: { tag: 'Ground', h1: 'Back on the ground.', h2: 'Your day is next.', form: 'Quote form', where: 'Location', place: 'Alanya, Antalya, Turkey', hours: 'Hours', call: 'First call', free: 'Free. Send the date, the place and what you need.' },
+  uk: { tag: 'Земля', h1: 'Ми приземлилися.', h2: 'Тепер ваш день.', form: 'Форма заявки', where: 'Де ми', place: 'Аланія, Анталія, Туреччина', hours: 'Години роботи', call: 'Консультація', free: 'Безкоштовно. Напишіть дату, місце і що потрібно зняти.' },
+  ru: { tag: 'Земля', h1: 'Мы приземлились.', h2: 'Теперь ваш день.', form: 'Форма заявки', where: 'Где мы', place: 'Алания, Анталья, Турция', hours: 'Часы работы', call: 'Консультация', free: 'Бесплатно. Напишите дату, место и что нужно снять.' },
+}[lang];
+---
+
+<section class="ground t-night" aria-labelledby="ground-h">
+  <div class="ground__zero" aria-hidden="true" data-t="0 m"></div>
+  <div class="wrap ground__body">
+    <p class="alt-tag mono"><b>ALT 0 m</b> {T.tag}</p>
+    <h2 id="ground-h" style="margin-top:clamp(1.5rem,4vw,3rem)">
+      <span class="wide l">{T.h1}</span>
+      <span class="serif">{T.h2}</span>
+    </h2>
+    <div class="ground__links cta-row">
+      <a class="btn" href={wa(waText)} rel="noopener">{UI[lang].askDate} <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="link" href={`${r('contact', lang)}#form`}>{T.form}</a>
+      <a class="link" href={`tel:${SITE.phoneE164}`}>{SITE.phoneDisplay}</a>
+    </div>
+    <dl class="ground__info">
+      <div>
+        <dt class="mono">{T.where}</dt>
+        <dd>{T.place}<br /><span class="mono">{COORDS[lang]}</span></dd>
+      </div>
+      <div>
+        <dt class="mono">{T.hours}</dt>
+        {HOURS[lang].map((h) => <dd>{h.days}: {h.time}</dd>)}
+      </div>
+      <div>
+        <dt class="mono">{T.call}</dt>
+        <dd>{T.free}</dd>
+      </div>
+    </dl>
+  </div>
+  <div class="ground__line" aria-hidden="true"></div>
+</section>

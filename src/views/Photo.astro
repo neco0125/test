@@ -1,0 +1,108 @@
+---
+// Fotosessiya / photoshoot: turistlerin en çok aradığı iş. Türkçedeki dış mekân, aile, hamile, doğum günü
+// ve Save the Date hizmetlerinin ziyaretçiye göre toparlanmış hâli; yeni bir hizmet ya da iddia yok.
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Faq from '../components/Faq.astro';
+import Ground from '../components/Ground.astro';
+import { SITE, pad2, wa } from '../config';
+import { UI, r, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+
+interface Props {
+  lang: XLang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const p = t.photo;
+const url = r('photo', lang);
+const crumbs = [{ name: p.crumb, href: url }];
+
+const service = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: p.h1sr.replace(/:\s*$/, ''),
+  serviceType: p.crumb,
+  description: p.description,
+  areaServed: [
+    { '@type': 'City', name: 'Alanya' },
+    { '@type': 'City', name: 'Antalya' },
+  ],
+  provider: { '@id': `${SITE.url}/#isletme`, '@type': 'ProfessionalService', name: SITE.name, telephone: SITE.phoneE164 },
+  hasOfferCatalog: { '@type': 'OfferCatalog', name: p.typesH, itemListElement: p.types.map((s) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.name, description: s.text } })) },
+  url: `${SITE.url}${url}`,
+};
+const faq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: p.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base title={p.title} description={p.description} crumbs={crumbs} schema={[service, faq]} serifAbove lang={lang}>
+  <PageHead title={p.h1a} sub={p.h1b} lead={p.lead} crumbs={crumbs} />
+  <div class="wrap" style="padding-bottom:clamp(3rem,6vw,5rem)">
+    <div class="cta-row">
+      <a class="btn" href={wa(p.waCta)} rel="noopener">{UI[lang].askDate} <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="link" href={r('contact', lang) + '#form'}>{t.common.quoteForm}</a>
+    </div>
+  </div>
+
+  <section class="chap t-ivory" aria-labelledby="p1">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 1,5 m</b> {p.typesTag}</p>
+        <h2 class="wide l" id="p1">{p.typesH}</h2>
+      </div>
+      <ul class="rows">
+        {
+          p.types.map((s, i) => (
+            <li class="row">
+              <span class="row__no mono">{pad2(i + 1)}</span>
+              <h3>{s.name}</h3>
+              <p>{s.text}</p>
+              <a class="row__go" href={wa(t.common.waQuote(s.ask))} rel="noopener">
+                {t.common.getQuote}<span class="sr">: {s.name}</span> <span class="arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="chap t-night" aria-labelledby="p2">
+    <div class="wrap split">
+      <div>
+        <p class="alt-tag mono"><b>ALT 1 m</b> {p.planTag}</p>
+        <h2 class="wide m" id="p2" style="margin-top:1.25rem">{p.planH}</h2>
+        <p class="copy" style="margin-top:1.25rem">{t.common.languageNote}</p>
+      </div>
+      <dl class="kv">
+        {
+          p.plan.map((f) => (
+            <div>
+              <dt class="mono">{f.name}</dt>
+              <dd>{f.text}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" aria-labelledby="p3">
+    <div class="wrap split">
+      <div>
+        <p class="alt-tag mono"><b>ALT 0,5 m</b> {t.common.faqTitle}</p>
+        <h2 class="serif l" id="p3" style="margin-top:1.25rem">{t.common.faqH}</h2>
+        <p class="copy" style="margin-top:1.25rem">
+          <a href={r('wedding', lang)}>{t.wedding.crumb}</a> · <a href={r('drone', lang)}>{t.drone.crumb}</a> · <a href={r('services', lang)}>{t.services.crumb}</a>
+        </p>
+      </div>
+      <Faq items={p.faq} />
+    </div>
+  </section>
+
+  <Ground lang={lang} waText={p.waCta} />
+</Base>

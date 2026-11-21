@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import { LEGAL } from '../config';
+import { fmtDate, r, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+
+interface Props {
+  lang: XLang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const p = t.privacy;
+const crumbs = [{ name: p.crumb, href: r('privacy', lang) }];
+---
+
+<Base title={p.title} description={p.description} crumbs={crumbs} theme="ivory" lang={lang}>
+  <PageHead title={p.title.replace('конфиденциальности', 'конфиденци­альности').replace('конфіденційності', 'конфіденцій­ності')} crumbs={crumbs} />
+  <div class="wrap" style="padding-bottom:var(--sec)">
+    <div class="article" style="border-top:1px solid var(--rule)">
+      <p class="article__side mono">{p.updated}<br />{fmtDate(new Date(LEGAL.updated), lang)}</p>
+      <div class="prose article__main">
+        {
+          p.body.map(([hd, txt]) => (
+            <>
+              {hd && <h2>{hd}</h2>}
+              <p set:html={txt} />
+            </>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,47 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/PageHead.astro';
+import { SITE, isoDate, pad2, trDate } from '../../config';
+
+const posts = (await getCollection('blog')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const crumbs = [{ name: 'Blog', href: '/blog/' }];
+const description = 'Alanya ve Antalya’da düğün planlaması, gün batımı saatleri, düğün videosu, drone çekimi fiyatları ve otel tanıtım videosu üzerine yazılar.';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: 'Necip Bozdemir blogu',
+  url: `${SITE.url}/blog/`,
+  inLanguage: 'tr',
+  blogPost: posts.map((p) => ({ '@type': 'BlogPosting', headline: p.data.title, url: `${SITE.url}/blog/${p.id}/`, datePublished: isoDate(p.data.date) })),
+};
+---
+
+<Base title="Blog: düğün, drone ve video notları" description={description} crumbs={crumbs} schema={[schema]} theme="ivory" serifAbove>
+  <PageHead title="Blog" sub="notlar." lead="Düğün planlaması, gün batımı saatleri, düğün videosu, drone ve sosyal medya üzerine." crumbs={crumbs} />
+
+  <section class="wrap" aria-label="Yazılar" style="padding-bottom:var(--sec)">
+    <p class="alt-tag mono" style="margin-bottom:1.25rem"><b>{pad2(posts.length)}</b> yazı · yeniden eskiye</p>
+    <ol class="rows">
+      {
+        posts.map((p, i) => (
+          <li class="post-row">
+            <span class="post-row__no mono">{pad2(i + 1)}</span>
+            <p class="post-row__meta mono">
+              <time datetime={isoDate(p.data.date)}>{trDate(p.data.date)}</time>
+              <span>{p.data.category}</span>
+              <span>{p.data.readingTime} dk okuma</span>
+            </p>
+            <h2>
+              <a href={`/blog/${p.id}/`}>{p.data.title}</a>
+            </h2>
+            <span class="post-row__go arrow" aria-hidden="true">
+              →
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</Base>

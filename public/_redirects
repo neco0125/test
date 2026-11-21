@@ -1,0 +1,17 @@
+# Eski sitenin adresleri -> yeni temiz adresler (Cloudflare Pages / Netlify biçimi)
+/index.html                               /                                   301
+/hizmetler.html                           /hizmetler/                         301
+/portfolyo.html                           /galeri/                            301
+/hakkimizda.html                          /hakkimizda/                        301
+/blog.html                                /blog/                              301
+/iletisim.html                            /iletisim/                          301
+/blog/alanya-dugun-mekanlari.html         /blog/alanya-dugun-mekanlari/       301
+/blog/dugun-fotografcisi-secimi.html      /blog/dugun-fotografcisi-secimi/    301
+/blog/drone-dugun-cekimi.html             /blog/drone-dugun-cekimi/           301
+/blog/save-the-date-nedir.html            /blog/save-the-date-nedir/          301
+/blog/instagram-reels-ipuclari.html       /blog/instagram-reels-ipuclari/     301
+/blog/kina-gecesi-fotograflari.html       /blog/kina-gecesi-fotograflari/     301
+
+# Birleştirilen yazılar (yamyamlık): eski yazı -> tutulan yazı
+/blog/alanya-dis-cekim-yerleri/           /blog/alanya-dis-cekim-mekanlari/   301
+/blog/alanya-dis-cekim-yerleri            /blog/alanya-dis-cekim-mekanlari/   301

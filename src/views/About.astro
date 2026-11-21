@@ -1,0 +1,83 @@
+---
+import Pic from '../components/Pic.astro';
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Ground from '../components/Ground.astro';
+import Team from '../components/Team.astro';
+import { SITE, pad2 } from '../config';
+import { PLACES, r, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+import portrait from '../assets/img/necip-portre.jpg';
+
+interface Props {
+  lang: XLang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const p = t.about;
+const url = r('about', lang);
+const crumbs = [{ name: p.crumb, href: url }];
+
+// Kişi düğümü Türkçe /hakkimizda/ sayfasında tanımlı; burada aynı @id'ye bağlanılır.
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: p.h,
+  url: `${SITE.url}${url}`,
+  inLanguage: lang,
+  about: { '@id': `${SITE.url}/#isletme` },
+  mainEntity: { '@type': 'Person', '@id': `${SITE.url}/hakkimizda/#necip`, name: SITE.name, jobTitle: p.jobTitle, sameAs: [SITE.instagram] },
+};
+---
+
+<Base title={p.title} description={p.description} crumbs={crumbs} schema={[schema]} serifAbove lang={lang}>
+  <PageHead title={p.h} sub={p.sub} crumbs={crumbs} />
+
+  <section class="chap t-night" aria-labelledby="a1" style="padding-top:0">
+    <div class="wrap about">
+      <figure class="about__img">
+        <Pic src={portrait} widths={[400, 640, 960]} sizes="(min-width: 56rem) 38vw, 92vw" alt={t.home.portraitAlt} eager />
+      </figure>
+      <div class="about__txt">
+        <h2 class="serif" id="a1">{p.me}</h2>
+        <p class="lead" style="margin-top:1.5rem;max-width:32ch">{p.lead}</p>
+        <div class="copy" style="margin-top:1.25rem">
+          <p>{p.copy}</p>
+          <p style="margin-top:1rem">{t.common.languageNote}</p>
+        </div>
+        <div class="about__stats mono">
+          <span><b>{PLACES[lang][0]}</b>{PLACES[lang][1]}</span>
+          <span><b>50/60</b>fps drone</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Team lang={lang} />
+
+  <section class="chap t-ivory" aria-labelledby="a2">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>06</b> {p.principlesTag}</p>
+        <h2 id="a2" style="display:grid">
+          <span class="wide l">{p.principlesA}</span>
+          <span class="serif l" style="padding-left:clamp(1rem,8vw,9rem)">{p.principlesB}</span>
+        </h2>
+      </div>
+      <dl class="rows">
+        {
+          t.data.principles.map((x, i) => (
+            <div class="row row--3">
+              <span class="row__no mono" aria-hidden="true">{pad2(i + 1)}</span>
+              <dt>{x.name}</dt>
+              <dd>
+                {x.text} {x.key && <a href={r(x.key, lang)}>{x.link}</a>}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+  <Ground lang={lang} />
+</Base>

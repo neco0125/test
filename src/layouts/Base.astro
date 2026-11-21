@@ -1,0 +1,440 @@
+---
+import { Font, Image, fontData } from 'astro:assets';
+import '../styles/global.css';
+import { NAV, SITE, pad2, wa } from '../config';
+import { COORDS, HOURS, LANGS, LANG_NAME, LOCALE, NAV_I18N, UI, altsOf, langOf, r, type Alts, type Lang } from '../i18n';
+import logoLight from '../assets/img/logo-acik.png';
+
+interface Crumb {
+  name: string;
+  href: string;
+}
+interface Props {
+  title: string;
+  description: string;
+  /** Kırıntı yolu (Ana sayfa otomatik eklenir); BreadcrumbList JSON-LD buradan üretilir */
+  crumbs?: Crumb[];
+  schema?: Record<string, unknown>[];
+  ogType?: 'website' | 'article';
+  /** Paylaşım görseli (mutlak yol ya da URL, 1200x630); yoksa /og.jpg */
+  ogImage?: string;
+  ogImageAlt?: string;
+  noindex?: boolean;
+  fullTitle?: boolean;
+  /** Sayfanın zemin tonu */
+  theme?: 'night' | 'ivory';
+  /** Üst bilgi tam ekran görselin üstünde dursun */
+  overlay?: boolean;
+  /** Sağ kenarda kaydırmaya bağlı altimetre */
+  altimeter?: boolean;
+  /** Artık kullanılmıyor (tek yazı tipi); eski sayfalar bozulmasın diye kabul ediliyor */
+  serifAbove?: boolean;
+  /** Sayfa dili; verilmezse yoldan (/en/, /ru/) bulunur */
+  lang?: Lang;
+  /** Diğer dillerdeki karşılıklar; verilmezse i18n ROUTES'tan */
+  alts?: Alts;
+}
+
+const {
+  title,
+  description,
+  crumbs = [],
+  schema = [],
+  ogType = 'website',
+  ogImage: ogImageIn,
+  ogImageAlt = 'Turkuaz denizde ilerleyen beyaz bir yatın üstten drone görüntüsü ve Necip Bozdemir logosu',
+  noindex = false,
+  fullTitle = false,
+  theme = 'night',
+  overlay = false,
+  altimeter = false,
+  serifAbove = false,
+  alts: altsIn,
+} = Astro.props;
+
+const path = Astro.url.pathname;
+const lang: Lang = Astro.props.lang ?? langOf(path);
+const u = UI[lang];
+const nav = lang === 'tr' ? NAV.map((n) => ({ ...n })) : NAV_I18N[lang].map((n) => ({ ...n, href: r(n.key, lang) }));
+const home = r('home', lang);
+// noindex sayfalarda (404, teşekkürler) dil seçici ana sayfalara gider
+const alts: Alts = noindex ? {} : { ...altsOf(path), ...altsIn, [lang]: path };
+const altLangs = LANGS.filter((l) => alts[l]);
+const xDefault = alts.en ?? alts.tr;
+// Dil seçicide karşılığı olmayan dil o dilin ana sayfasına gider
+const switchTo = LANGS.map((l) => ({ l, href: alts[l] ?? r('home', l) }));
+const canonical = new URL(path, SITE.url).href;
+const pageTitle = fullTitle ? title : `${title} | ${SITE.name}`;
+const ogImage = new URL(ogImageIn ?? '/og.jpg', SITE.url).href;
+// İlk ekranda kullanılan tek dosyalar: her ailenin çekirdek Latin alt kümesi (astro.config.mjs'teki ilk varyant)
+const sansCore = fontData['--font-archivo']?.[0]?.src[0]?.url;
+// Ğ ğ İ Ş ş dosyaları (ikinci varyant) de birlikte önden yüklenir: çekirdekle aynı anda gelir,
+// böylece yazı tipi değişimi sayfayı bir kez yeniden dizer, ayrı ayrı gelip iki kez değil.
+// Rusça ve Ukraynaca sayfalarda Türkçe harf dosyası yerine Kiril dosyası (her ailenin son varyantı) önden yüklenir; İngilizcede ikisi de gerekmez.
+const extra = (v: keyof typeof fontData) => (lang === 'tr' ? fontData[v]?.[1] : lang === 'ru' || lang === 'uk' ? fontData[v]?.at(-1) : undefined)?.src[0]?.url;
+const sansTr = extra('--font-archivo');
+const year = new Date().getFullYear();
+
+const trail = [{ name: u.home, href: home }, ...crumbs];
+const ld: Record<string, unknown>[] = [...schema];
+if (crumbs.length) {
+  ld.push({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: new URL(c.href, SITE.url).href,
+    })),
+  });
+}
+const isCurrent = (href: string) => path === href || (href !== home && path.startsWith(href));
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {altLangs.length > 1 && altLangs.map((l) => <link rel="alternate" hreflang={l} href={new URL(alts[l]!, SITE.url).href} />)}
+    {altLangs.length > 1 && xDefault && <link rel="alternate" hreflang="x-default" href={new URL(xDefault, SITE.url).href} />}
+    <link rel="alternate" type="application/rss+xml" title={u.rss} href={lang === 'tr' ? '/rss.xml' : `/${lang}/rss.xml`} />
+    <meta name="robots" content={noindex ? "noindex" : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"} />
+    <meta name="yandex-verification" content="ccf77e6960359e63" />
+    <meta name="theme-color" content="#0B0F12" />
+    {/* Google arama sonucundaki site simgesi: 48'in katı kare PNG + kökte favicon.ico. SVG modern tarayıcılar için. */}
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon-192.png" sizes="192x192" type="image/png" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    {sansCore && <link rel="preload" href={sansCore} as="font" type="font/woff2" crossorigin />}
+    {sansTr && <link rel="preload" href={sansTr} as="font" type="font/woff2" crossorigin />}
+    <slot name="preload" />
+    <Font cssVariable="--font-archivo" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content={LOCALE[lang]} />
+    {altLangs.filter((l) => l !== lang).map((l) => <meta property="og:locale:alternate" content={LOCALE[l]} />)}
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <slot name="head" />
+    {ld.map((item) => <script is:inline type="application/ld+json" set:html={JSON.stringify(item)} />)}
+    <script is:inline>
+      document.documentElement.className = 'js';
+    </script>
+  </head>
+  <body class={`t-${theme}`}>
+    <a class="skip" href="#icerik">{u.skip}</a>
+    {
+      altimeter && (
+        <div class="altm" aria-hidden="true">
+          <span class="altm__cap">ALT</span>
+          <span class="altm__scale" />
+          <span class="altm__needle">
+            <span class="altm__val" />
+          </span>
+        </div>
+      )
+    }
+    <header class:list={['hd t-night', { 'hd--over': overlay }]}>
+      <div class="hd__in wrap">
+        <a class="hd__logo" href={home} aria-label={u.logo}>
+          <Image src={logoLight} alt="Necip Bozdemir" width={204} widths={[150, 204, 300, 408]} sizes="clamp(150px, 14vw, 196px)" format="webp" quality={72} loading="eager" />
+        </a>
+        <nav class="nav" id="nav" aria-label={u.mainNav}>
+          <ol class="nav__list">
+            {
+              nav.map((n, i) => (
+                <li style={`--i:${i}`}>
+                  <a class:list={['nav__a', `nav__a--${n.voice}`]} href={n.href} aria-current={isCurrent(n.href) ? 'page' : undefined}>
+                    <span class="nav__no">{pad2(i + 1)}</span>
+                    <span class="nav__t">{n.label}</span>
+                    <span class="nav__alt" aria-hidden="true">ALT {n.alt}</span>
+                  </a>
+                </li>
+              ))
+            }
+          </ol>
+          <div class="nav__foot">
+            <a class="nav__wa" href={wa(u.waHello)} rel="noopener"><span class="rec" aria-hidden="true"></span>{u.askDate}</a>
+            <a href={`tel:${SITE.phoneE164}`}>{SITE.phoneDisplay}</a>
+            <a href={SITE.instagram} rel="noopener">Instagram {SITE.instagramHandle}</a>
+            <span class="nav__co" aria-hidden="true">{SITE.locality} · {COORDS[lang]}</span>
+            <ul class="lsw__menu mono" aria-label={u.langs}>
+              {switchTo.map((x) => <li><a href={x.href} hreflang={x.l} lang={x.l} aria-current={x.l === lang ? 'true' : undefined}>{LANG_NAME[x.l]}</a></li>)}
+            </ul>
+          </div>
+        </nav>
+        <details class="lsw mono">
+          <summary>{lang.toUpperCase()}<span class="sr"> · {u.langs}: {LANG_NAME[lang]}</span></summary>
+          <ul class="lsw__list">
+            {switchTo.filter((x) => x.l !== lang).map((x) => <li><a href={x.href} hreflang={x.l} lang={x.l}>{LANG_NAME[x.l]}</a></li>)}
+          </ul>
+        </details>
+        <a class="hd__cta" href={wa(u.waHello)} rel="noopener"><span class="rec" aria-hidden="true"></span>{u.askShort}</a>
+        <button class="hd__btn" type="button" aria-label={u.menu} aria-expanded="false" aria-controls="nav" data-menu>
+          <span class="hd__btn-t" data-o={u.menu} data-c={u.close}></span>
+          <span class="hd__ico" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="icerik">
+      <slot />
+    </main>
+
+    <footer class="ft t-night">
+      <div class="wrap grid">
+        <div class="ft__logo">
+          <Image src={logoLight} alt="Necip Bozdemir" width={196} densities={[1, 2]} format="webp" quality={80} loading="lazy" />
+          <p>{u.tagline}</p>
+        </div>
+        <div class="ft__col">
+          <h2 class="mono">{u.contact}</h2>
+          <ul>
+            <li><a href={`tel:${SITE.phoneE164}`}>{SITE.phoneDisplay}</a></li>
+            <li><a href={wa()} rel="noopener">WhatsApp</a></li>
+            <li><a href={SITE.instagram} rel="noopener">Instagram {SITE.instagramHandle}</a></li>
+            <li>{SITE.locality}, {SITE.region}</li>
+          </ul>
+        </div>
+        <div class="ft__col">
+          <h2 class="mono">{u.pages}</h2>
+          <ul>
+            {nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+            <li><a href={r('blog', lang)}>Blog</a></li>
+          </ul>
+        </div>
+        <div class="ft__col">
+          <h2 class="mono">{u.hours}</h2>
+          <ul>
+            {HOURS[lang].map((h) => <li>{h.days}<br /><span class="mono">{h.time}</span></li>)}
+          </ul>
+        </div>
+        <p class="ft__base mono">
+          <span>© {year} Necip Bozdemir</span>
+          <span>{COORDS[lang]}</span>
+          <span><a href={r('privacy', lang)}>{u.privacy}</a></span>
+          <span><button type="button" class="ck-reopen" data-ck-open>{u.ckPref}</button></span>
+          <span class="ft__lang">{switchTo.map((x) => <a href={x.href} hreflang={x.l} lang={x.l} aria-current={x.l === lang ? 'true' : undefined}>{x.l.toUpperCase()}</a>)}</span>
+        </p>
+      </div>
+    </footer>
+
+    {/*
+      Satır içi betik (HTML ile gelir, ayrı istek yok; sayfa başına en çok 6 KB, verify-dist denetler).
+      Açıklamalar betiğin içinde değil burada duruyor, sayfaya gitmesinler diye:
+      - Altimetre: 0 m altbilgiden önce gelsin diye altbilginin yüksekliğini CSS'e ver
+      - Mobil menü
+      - Sayfa yüklendikten sonra, tarayıcı boşa çıkınca çalıştır
+      - Vizör zaman kodu (25 fps): yalnızca vizör ekrandayken ve sekme görünürken akar
+      - Hero döngüsü: sayfa yüklendikten ve tarayıcı boşa çıktıktan sonra; hareket azaltma, veri tasarrufu ve 2G'de hiç yüklenmez
+      - Tıklayınca oynayan video: afiş yerinde kalır, "Oynat"a basılmadan dosya inmez
+      - Klip makarası
+      - Form: tuzak alan doluysa gönderme; uç nokta tanımlı değilse içeriği WhatsApp mesajına çevir
+      - E-postayla gönderim: yanıtla dendiğinde müşterinin adresine gitsin
+    */}
+    <script is:inline>
+      (() => {
+        const d = document;
+        const q = (s, r = d) => r.querySelector(s);
+        const qa = (s, r = d) => r.querySelectorAll(s);
+        const mm = (m) => matchMedia(m).matches;
+
+        const ft = q('.ft');
+        if (ft && q('.altm'))
+          new ResizeObserver(([e]) => d.documentElement.style.setProperty('--tail', e.borderBoxSize[0].blockSize + 'px')).observe(ft);
+
+        const btn = q('[data-menu]');
+        const nav = q('#nav');
+        const setMenu = (open) => {
+          btn.setAttribute('aria-expanded', open);
+          nav.dataset.open = open;
+          if (open) q('a', nav).focus({ preventScroll: true });
+        };
+        btn?.addEventListener('click', () => setMenu(btn.getAttribute('aria-expanded') !== 'true'));
+        addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && nav.dataset.open === 'true') setMenu(false), btn.focus();
+        });
+        nav?.addEventListener('click', (e) => e.target.closest('a') && setMenu(false));
+
+        const later = (fn, ms) =>
+          addEventListener('load', () => setTimeout(() => (window.requestIdleCallback || setTimeout)(fn, { timeout: 2000 }), ms));
+
+        const tc = q('[data-tc]');
+        if (tc && !mm('(prefers-reduced-motion: reduce)'))
+          later(() => {
+            const t0 = performance.now();
+            const p = (n) => String(n).padStart(2, '0');
+            let id = 0;
+            let seen = true;
+            const tick = () => {
+              const ms = performance.now() - t0;
+              const s = Math.floor(ms / 1000);
+              tc.textContent = `${p(Math.floor(s / 3600))}:${p(Math.floor(s / 60) % 60)}:${p(s % 60)}:${p(Math.floor(ms / 40) % 25)}`;
+            };
+            const run = () => {
+              clearInterval(id);
+              id = seen && !d.hidden ? setInterval(tick, 40) : 0;
+            };
+            new IntersectionObserver(([e]) => ((seen = e.isIntersecting), run())).observe(tc);
+            d.addEventListener('visibilitychange', run);
+          }, 0);
+
+        const c = navigator.connection;
+        const lite = mm('(prefers-reduced-motion: reduce)') || (c && (c.saveData || /2g/.test(c.effectiveType)));
+        // Sessiz döngüler yalnızca ekrandayken ve tam video oynamıyorken çalar (telefonlarda aynı anda çözülebilen video sayısı sınırlı)
+        let full = null;
+        const loops = new Set();
+        const seen = new WeakMap();
+        const tick = (v) => (seen.get(v) && !full && !d.hidden ? v.play().catch(() => {}) : v.pause());
+        const lio = new IntersectionObserver((es) => es.forEach((e) => (seen.set(e.target, e.isIntersecting), tick(e.target))), { rootMargin: '50% 0px' });
+        d.addEventListener('visibilitychange', () => loops.forEach(tick));
+        const loop = (box, src) => {
+          const v = d.createElement('video');
+          v.muted = v.loop = v.playsInline = true;
+          v.setAttribute('aria-hidden', 'true');
+          v.src = src;
+          v.addEventListener('playing', () => v.classList.add('on'), { once: true });
+          box.append(v);
+          seen.set(v, true);
+          loops.add(v);
+          lio.observe(v);
+          tick(v);
+        };
+        const unloop = (v) => (v.pause(), lio.unobserve(v), loops.delete(v), v.remove());
+        const hero = q('[data-hero]');
+        if (hero && !lite) later(() => loop(hero, mm('(max-aspect-ratio: 1/1), (max-width: 760px)') ? hero.dataset.s : hero.dataset.l), 1200);
+        if (!lite)
+          later(() =>
+            qa('[data-pv],[data-stage] [data-play]').forEach((a) =>
+              new IntersectionObserver(([e], o) => e.isIntersecting && (o.disconnect(), (a.dataset.on = ''), a.dataset.pv && loop(a, a.dataset.pv)), { rootMargin: '300px' }).observe(a),
+            ), 2500); // önizlemeler kapak resimleriyle (LCP) bant genişliği için yarışmasın
+
+        // Aynı anda tek tam video: yenisi başlarken önceki kapatılır ve kutusu kapak resmine döner
+        let reset = null;
+        const play = (box, href, img, snd, undo) => {
+          reset?.();
+          q('video[controls]', box)?.remove();
+          const v = d.createElement('video');
+          v.controls = v.playsInline = true;
+          v.muted = !snd;
+          v.preload = 'auto';
+          if (img) v.poster = img.currentSrc;
+          v.src = href;
+          box.append(v);
+          box.dataset.playing = '';
+          full = v;
+          loops.forEach(tick);
+          const idle = () => {
+            if (full !== v) return;
+            full = null;
+            loops.forEach(tick);
+          };
+          v.addEventListener('pause', idle);
+          v.addEventListener('ended', idle);
+          v.addEventListener('play', () => {
+            full = v;
+            loops.forEach(tick);
+          });
+          reset = () => {
+            v.pause();
+            v.remove();
+            delete box.dataset.playing;
+            if (full === v) full = null;
+            undo?.();
+            reset = null;
+          };
+          v.play().catch(() => {});
+        };
+
+        const stage = q('[data-stage]');
+        if (stage) {
+          const img = q('img', stage);
+          const go = q('[data-play]', stage);
+          const len = q('[data-len]', stage);
+          const tabs = qa('[data-clip]');
+          tabs.forEach((t) =>
+            t.addEventListener('click', (e) => {
+              e.preventDefault();
+              tabs.forEach((x) => x.removeAttribute('aria-current'));
+              t.setAttribute('aria-current', 'true');
+              if (q('video[controls]', stage)) reset?.();
+              img.hidden = go.hidden = false;
+              img.srcset = t.dataset.srcset;
+              img.src = t.dataset.src;
+              img.alt = t.dataset.alt;
+              go.href = t.href;
+              len.textContent = t.dataset.len;
+              q('video', go) && unloop(q('video', go));
+              if (t.dataset.loop) {
+                go.dataset.pv = t.dataset.loop;
+                if ('on' in go.dataset) loop(go, t.dataset.loop);
+              } else delete go.dataset.pv;
+            }),
+          );
+          go.addEventListener('click', (e) => {
+            e.preventDefault();
+            play(stage, go.href, img, false, () => (img.hidden = go.hidden = false));
+            img.hidden = go.hidden = true;
+          });
+        }
+        qa('[data-inline]').forEach((a) =>
+          a.addEventListener('click', (e) => {
+            e.preventDefault();
+            const box = a.parentElement;
+            const img = q('img', a);
+            play(box, a.href, img, 'sound' in a.dataset, () => (a.hidden = false));
+            a.hidden = true;
+          }),
+        );
+
+        const form = q('[data-form]');
+        if (form) q('[type=submit]', form).disabled = false;
+        form?.addEventListener('submit', (e) => {
+          if (form.elements._honey.value) return e.preventDefault();
+          const base = form.dataset.wa;
+          if (!base) {
+            if (form.elements._replyto) form.elements._replyto.value = form.elements.eposta.value.trim();
+            return;
+          }
+          e.preventDefault();
+          const v = (k) => form.elements[k].value.trim();
+          const L = (form.dataset.l || 'Merhaba, teklif almak istiyorum.|Ad soyad|Telefon|E-posta|Hizmet|Planlanan tarih').split('|');
+          const lines = [L[0], '', L[1] + ': ' + v('ad'), L[2] + ': ' + v('telefon')];
+          if (v('eposta')) lines.push(L[3] + ': ' + v('eposta'));
+          lines.push(L[4] + ': ' + v('hizmet'));
+          if (v('tarih')) lines.push(L[5] + ': ' + v('tarih').split('-').reverse().join('.'));
+          lines.push('', v('mesaj'));
+          const url = base + encodeURIComponent(lines.join('\n'));
+          const w = window.open(url, '_blank');
+          if (w) w.opener = null;
+          else location.href = url;
+        });
+      })();
+    </script>
+    <div class="ck" role="region" aria-label={u.ckPref} data-ck hidden>
+      <p>{u.ckText} <a href={r('privacy', lang)}>{u.ckMore}</a></p>
+      <div class="ck__b">
+        <button type="button" class="ck__no" data-ck-no>{u.ckNo}</button>
+        <button type="button" class="ck__yes" data-ck-yes>{u.ckYes}</button>
+      </div>
+    </div>
+    {/* Çerez onayı: GA4 yalnızca "Kabul et" sonrası yüklenir; seçim tarayıcıda saklanır. Teklif için WhatsApp/telefon tıklaması ve form gönderimi generate_lead olarak ölçülür. Onaydan sonra /rum.js, /wv.js (web-vitals 6.2.3, node_modules'tan kopya) ile gerçek kullanıcıların CLS/INP/LCP/FCP/TTFB değerlerini GA4'e olay olarak gönderir. */}
+    <script is:inline define:vars={{ ga: SITE.ga4 }}>let d=document,K='nb-ck',x=d.querySelector('[data-ck]'),on=0,w=window,g=()=>{try{return localStorage[K]}catch{}},p=v=>{try{localStorage[K]=v}catch{}},L=()=>{if(on||!ga)return;on=1;w.dataLayer||=[];w.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date);gtag('config',ga,{allow_google_signals:!1,allow_ad_personalization_signals:!1});let s=d.createElement('script');s.async=1;s.src='https://www.googletagmanager.com/gtag/js?id='+ga;d.head.append(s);import('/rum.js')},E=m=>m&&w.gtag&&gtag('event','generate_lead',{method:m}),c=g();c=='yes'?L():c!='no'&&x&&(x.hidden=!1);d.addEventListener('click',e=>{let t=e.target.closest('[data-ck-yes],[data-ck-no],[data-ck-open],a[href]');if(!t)return;if(t.matches('[data-ck-yes]')){p('yes');x.hidden=!0;L()}else if(t.matches('[data-ck-no]')){p('no');x.hidden=!0;on&&location.reload()}else if(t.matches('[data-ck-open]'))x.hidden=!1;else{let h=t.getAttribute('href');E(/wa\.me|whatsapp/.test(h)?'whatsapp':h.startsWith('tel:')?'phone':h.startsWith('mailto:')?'email':'')}});d.addEventListener('submit',()=>E('form'))</script>
+  </body>
+</html>

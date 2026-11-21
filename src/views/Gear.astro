@@ -1,0 +1,67 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Ground from '../components/Ground.astro';
+import { SITE, pad2 } from '../config';
+import { UI, r, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+
+interface Props {
+  lang: XLang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const p = t.gear;
+const url = r('gear', lang);
+const crumbs = [{ name: p.crumb, href: url }];
+
+let n = 0;
+const groups = t.data.gearGroups.map((g) => ({ ...g, items: g.items.map((s) => ({ ...s, no: pad2(++n) })) }));
+const tones = ['t-night', 't-ivory', 't-night'];
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: p.title,
+  url: `${SITE.url}${url}`,
+  itemListElement: groups.flatMap((g) => g.items).map((s, i) => ({ '@type': 'ListItem', position: i + 1, name: s.name })),
+};
+---
+
+<Base title={p.title} description={p.description} crumbs={crumbs} schema={[schema]} serifAbove lang={lang}>
+  <PageHead title={p.h} sub={p.sub} lead={p.lead(n)} crumbs={crumbs} />
+  {
+    groups.map((g, gi) => (
+      <section class:list={['chap', tones[gi]]} id={g.id} aria-labelledby={`${g.id}-h`}>
+        <div class="wrap">
+          <div class="chap__hd">
+            <p class="alt-tag mono">
+              <b>{pad2(gi + 1)}</b> {g.items.length} {p.pieces}
+            </p>
+            <h2 class="wide l" id={`${g.id}-h`}>{g.title}</h2>
+            <p class="lead">{g.lead}</p>
+          </div>
+          <dl class="rows">
+            {g.items.map((s) => (
+              <div class="row row--3 gear">
+                <span class="row__no mono" aria-hidden="true">{s.no}</span>
+                <dt>
+                  {s.name}
+                  <span class="gear__tag mono">{s.tag}</span>
+                </dt>
+                <dd>{s.text}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+    ))
+  }
+  <section class="chap t-ivory" aria-labelledby="e-cta">
+    <div class="wrap">
+      <h2 class="serif l" id="e-cta">{p.ctaH}</h2>
+      <p class="copy" style="margin-top:1.25rem;max-width:46ch" set:html={p.ctaCopy} />
+      <a class="btn" style="margin-top:2rem" href={r('contact', lang)}>{UI[lang].askDate} <span class="arrow" aria-hidden="true">→</span></a>
+    </div>
+  </section>
+  <Ground lang={lang} />
+</Base>

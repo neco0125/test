@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+# Cloudflare iç adresleri (AI Labyrinth vb.); site içeriği değil, taranmasın.
+Disallow: /cdn-cgi/
+
+Sitemap: https://www.necipbozdemir.com/sitemap-index.xml
+Sitemap: https://www.necipbozdemir.com/video-sitemap.xml

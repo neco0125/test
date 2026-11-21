@@ -1,0 +1,27 @@
+---
+// Form e-postayla gönderildikten sonra gelinen sayfa (FORM_ACTION tanımlıyken _next ile).
+import Base from '../layouts/Base.astro';
+import { SITE, wa } from '../config';
+---
+
+<Base title="Mesajınız ulaştı" description="Teklif isteğiniz bize ulaştı. En kısa sürede dönüş yapacağız." noindex serifAbove>
+  <div class="page-hd wrap grid">
+    <p class="crumb alt-tag mono"><b>ALT 0 m</b> Kayıt alındı</p>
+    <h1>
+      <span class="wide xl">Ulaştı.</span>
+      <span class="serif">teşekkür ederiz.</span>
+    </h1>
+    <p class="lead">
+      Mesajınızı aldık, en kısa sürede dönüş yapacağız. Tarihiniz yakınsa beklemeden
+      <a href={wa('Merhaba, siteden teklif formu gönderdim.')} rel="noopener">WhatsApp’tan</a> ya da <a href={`tel:${SITE.phoneE164}`}>{SITE.phoneDisplay}</a>
+      numarasından da ulaşabilirsiniz.
+    </p>
+  </div>
+  <div class="wrap" style="padding-bottom:var(--sec)">
+    <ul class="rows">
+      <li><a class="row row--nav" href="/drone/"><span class="row__no mono">01</span><span class="row__name">Drone çalışmaları</span><span class="arrow" aria-hidden="true">→</span></a></li>
+      <li><a class="row row--nav" href="/dugun/"><span class="row__no mono">02</span><span class="row__name">Düğün filmi ve fotoğraf</span><span class="arrow" aria-hidden="true">→</span></a></li>
+      <li><a class="row row--nav" href="/"><span class="row__no mono">03</span><span class="row__name">Ana sayfa</span><span class="arrow" aria-hidden="true">→</span></a></li>
+    </ul>
+  </div>
+</Base>

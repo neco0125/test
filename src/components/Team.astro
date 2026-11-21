@@ -1,0 +1,78 @@
+---
+// Ekibin ikinci üyesi (dört dil), Necip'in tanıtımıyla aynı düzen, ayna simetrisiyle. Kişi düğümü /hakkimizda/#yusuf.
+import Pic from './Pic.astro';
+import photo from '../assets/img/yusuf-balkan.jpg';
+import { r, UI, type Lang } from '../i18n';
+
+interface Props {
+  lang?: Lang;
+}
+const { lang = 'tr' } = Astro.props;
+const T: Record<Lang, { me: string; lead: string; copy: string[]; since: string; shot: string; alt: string }> = {
+  tr: {
+    me: 'Ben Yusuf.',
+    lead: '2020’den beri kameranın arkasındayım.',
+    copy: [
+      'Necip’le iki kişilik bir ekibiz. Düğünde biri fotoğrafa, diğeri videoya odaklanabiliyor. Drone havadayken yerde de bir kamera çalışıyor.',
+      'Ekip küçük, bu yüzden kiminle çalışacağınızı ilk mesajdan bilirsiniz. Planı birlikte kurar, kurguyu ve rengi aynı masada bitiririz.',
+    ],
+    since: 'sektöre başladığım yıl',
+    shot: 'her çekim',
+    alt: 'Yusuf Balkan, gözlüklü ve ceketli, siyah beyaz portre',
+  },
+  en: {
+    me: 'I’m Yusuf.',
+    lead: 'I have been behind the camera since 2020.',
+    copy: [
+      'Necip and I are a two-person team. At a wedding one of us can focus on photos while the other films. When the drone is in the air, a camera keeps rolling on the ground.',
+      'The team is small, so you know from the first message who you will work with. We plan together and finish the edit and the colour at the same desk.',
+    ],
+    since: 'the year I started',
+    shot: 'every shoot',
+    alt: 'Black and white portrait of Yusuf Balkan wearing glasses and a jacket',
+  },
+  ru: {
+    me: 'Я Юсуф.',
+    lead: 'За камерой с 2020 года.',
+    copy: [
+      'Мы с Неджипом работаем вдвоем. На свадьбе один может заниматься фото, а другой видео. Пока дрон в воздухе, на земле снимает вторая камера.',
+      'Команда маленькая, поэтому с первого сообщения понятно, с кем вы будете работать. План составляем вместе, монтаж и цвет доводим за одним столом.',
+    ],
+    since: 'начало работы в профессии',
+    shot: 'каждая съемка',
+    alt: 'Черно-белый портрет Юсуфа Балкана в очках и куртке',
+  },
+  uk: {
+    me: 'Я Юсуф.',
+    lead: 'За камерою з 2020 року.',
+    copy: [
+      'Ми з Неджипом працюємо вдвох. На весіллі один може займатися фото, а інший відео. Поки дрон у повітрі, на землі знімає друга камера.',
+      'Команда невелика, тож з першого повідомлення зрозуміло, з ким ви працюватимете. План складаємо разом, монтаж і колір доводимо за одним столом.',
+    ],
+    since: 'початок роботи в професії',
+    shot: 'кожна зйомка',
+    alt: 'Чорно-білий портрет Юсуфа Балкана в окулярах і куртці',
+  },
+};
+const t = T[lang];
+---
+
+<section class="chap t-night team" aria-labelledby="team-h" id="ekip">
+  <div class="wrap about about--alt">
+    <figure class="about__img">
+      <Pic src={photo} widths={[320, 400]} sizes="(min-width: 56rem) 25rem, 92vw" alt={t.alt} />
+    </figure>
+    <div class="about__txt">
+      <h2 class="serif" id="team-h">{t.me}</h2>
+      <p class="lead" style="margin-top:1.5rem;max-width:32ch">{t.lead}</p>
+      <div class="copy" style="margin-top:1.25rem">
+        {t.copy.map((c, i) => <p style={i ? 'margin-top:1rem' : undefined}>{c}</p>)}
+      </div>
+      <div class="about__stats mono">
+        <span><b>2020</b>{t.since}</span>
+        <span><b>4K</b>{t.shot}</span>
+      </div>
+      <a class="btn" style="margin-top:2rem" href={r('contact', lang)}>{UI[lang].askDate} <span class="arrow" aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</section>

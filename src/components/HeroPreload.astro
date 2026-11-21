@@ -1,0 +1,17 @@
+---
+// İlk hero karesini <head>'de önceden yükletir (LCP). URL'ler Pic.astro ile birebir aynı
+// parametrelerle üretilir: aynı genişlikler, AVIF kalite 44.
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { HERO_SIZES } from '../data/btsSlides';
+interface Props {
+  src: ImageMetadata;
+  widths?: number[];
+  sizes?: string;
+}
+const { src, widths = [640, 960, 1200, 1600], sizes = HERO_SIZES } = Astro.props;
+const ws = widths.filter((w) => w <= src.width);
+const set = (await Promise.all(ws.map(async (width) => `${(await getImage({ src, width, format: 'avif', quality: 44 })).src} ${width}w`))).join(', ');
+---
+
+<link rel="preload" as="image" type="image/avif" imagesrcset={set} imagesizes={sizes} fetchpriority="high" />

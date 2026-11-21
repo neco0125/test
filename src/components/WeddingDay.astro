@@ -1,0 +1,19 @@
+---
+import { WEDDING_DAY } from '../data/content';
+interface Props {
+  items?: { when: string; name: string; text: string }[];
+}
+const { items = WEDDING_DAY } = Astro.props;
+---
+
+<ol class="day">
+  {
+    items.map((s) => (
+      <li>
+        <span class="day__when mono">{s.when}</span>
+        <span class="day__name">{s.name}</span>
+        <p class="day__text">{s.text}</p>
+      </li>
+    ))
+  }
+</ol>

@@ -1,0 +1,124 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import { FORM_ACTION, SITE, wa } from '../config';
+import { COORDS, HOURS, UI, r, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+
+interface Props {
+  lang: XLang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const p = t.contact;
+const url = r('contact', lang);
+const crumbs = [{ name: p.crumb, href: url }];
+const viaWhatsApp = FORM_ACTION === '';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: p.h,
+  url: `${SITE.url}${url}`,
+  inLanguage: lang,
+  mainEntity: { '@id': `${SITE.url}/#isletme` },
+};
+---
+
+<Base title={p.title} description={p.description} crumbs={crumbs} schema={[schema]} serifAbove lang={lang}>
+  <PageHead title={p.h} sub={p.sub} lead={p.lead} crumbs={crumbs} />
+
+  <section class="chap t-night" aria-labelledby="i1" style="padding-top:0">
+    <div class="wrap split">
+      <div><p class="alt-tag mono"><b>01</b> {p.infoTag}</p><h2 class="sr" id="i1">{p.infoH}</h2></div>
+      <dl class="facts">
+        <div>
+          <dt class="mono">{p.phone}</dt>
+          <dd class="big"><a href={`tel:${SITE.phoneE164}`}>{SITE.phoneDisplay}</a></dd>
+          <dd style="grid-column:2"><a href={wa(UI[lang].waHello)} rel="noopener">{p.wa}</a></dd>
+          <dd style="grid-column:2">{t.common.languageNote}</dd>
+        </div>
+        <div>
+          <dt class="mono">Instagram</dt>
+          <dd><a href={SITE.instagram} rel="noopener">{SITE.instagramHandle}</a></dd>
+        </div>
+        <div>
+          <dt class="mono">{p.location}</dt>
+          <dd>{p.place}</dd>
+          <dd class="mono" style="grid-column:2">{COORDS[lang]}</dd>
+        </div>
+        <div>
+          <dt class="mono">{p.hours}</dt>
+          {HOURS[lang].map((h) => <dd style="grid-column:2">{h.days}: {h.time}</dd>)}
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" id="form" aria-labelledby="i2">
+    <div class="wrap split">
+      <div>
+        <p class="alt-tag mono"><b>02</b> {p.formTag}</p>
+        <h2 class="wide m" id="i2" style="margin-top:1.25rem">{p.formH}</h2>
+        <p class="copy" style="margin-top:1.25rem">{p.required} {viaWhatsApp ? p.viaWa : p.viaMail}</p>
+      </div>
+      <form
+        class="form"
+        action={viaWhatsApp ? undefined : FORM_ACTION}
+        method="post"
+        data-form
+        data-l={p.waLines}
+        data-wa={viaWhatsApp ? `https://wa.me/${SITE.waNumber}?text=` : undefined}
+      >
+        <div>
+          <label for="ad">{p.name}</label>
+          <input id="ad" name="ad" type="text" autocomplete="name" required />
+        </div>
+        <div>
+          <label for="telefon">{p.tel}</label>
+          <input id="telefon" name="telefon" type="tel" autocomplete="tel" inputmode="tel" required />
+        </div>
+        <div>
+          <label for="eposta">{p.email}</label>
+          <input id="eposta" name="eposta" type="email" autocomplete="email" />
+        </div>
+        <div>
+          <label for="hizmet">{p.service}</label>
+          <select id="hizmet" name="hizmet" required>
+            <option value="">{p.choose}</option>
+            {t.data.formServices.map((s) => <option>{s}</option>)}
+          </select>
+        </div>
+        <div>
+          <label for="tarih">{p.date}</label>
+          <input id="tarih" name="tarih" type="date" />
+        </div>
+        <div class="full">
+          <label for="mesaj">{p.msg}</label>
+          <textarea id="mesaj" name="mesaj" rows="6" required></textarea>
+        </div>
+        <div class="hp" aria-hidden="true">
+          <label for="_honey">{p.honey}</label>
+          <input id="_honey" name="_honey" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        {
+          !viaWhatsApp && (
+            <>
+              <input type="hidden" name="_subject" value={`Site (${lang.toUpperCase()}): ${p.formH}`} />
+              <input type="hidden" name="_template" value="table" />
+              <input type="hidden" name="_next" value={new URL('/tesekkurler/', SITE.url).href} />
+              <input type="hidden" name="_replyto" value="" />
+            </>
+          )
+        }
+        <div class="full">
+          <button class="btn" type="submit" disabled={viaWhatsApp}>{viaWhatsApp ? p.sendWa : p.send}</button>
+        </div>
+        <p class="note full" set:html={p.note} />
+        <noscript>
+          <p class="note full">{p.noscript} <a href={wa(UI[lang].waHello)}>WhatsApp</a> · <a href={`tel:${SITE.phoneE164}`}>{SITE.phoneDisplay}</a></p>
+        </noscript>
+      </form>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,50 @@
+---
+// Başlık fotoğrafları. Telefonda tam kaplayan, sırayla geçen kareler (CSS döngüsü).
+// Masaüstünde kareler kırpılmadan, kendi oranlarında yan yana dizilir ve yavaşça kayar
+// (kareler çoğunlukla dikey, geniş ekranı tek kare doldurunca kırpılıyordu). Kesintisiz döngü için
+// dizi kopyalanır; kopyalar telefonda gizlidir. Hareket azaltılmışsa şerit durur.
+// İlk kare dışındakiler <template> içinde gelir; telefonda sayfa yüklendikten 3 sn sonra, masaüstünde
+// hemen eklenir: telefonda LCP görseliyle bant genişliği yarışmasınlar. İlk kareyi <head>'de HeroPreload ile önden yükleyin.
+import type { ImageMetadata } from 'astro';
+import Pic from './Pic.astro';
+import { HERO_SIZES } from '../data/btsSlides';
+interface Props {
+  slides: { src: ImageMetadata; alt: string; pos?: string }[];
+  widths?: number[];
+}
+const { slides, widths = [640, 960, 1200, 1600] } = Astro.props;
+const SLIDE = 6; // saniye
+const n = slides.length;
+const reps = n > 1 ? (n < 4 ? 4 : 2) : 1; // şerit ekrandan en az bir dizi geniş olsun
+const LOADER = `<script>addEventListener('load',()=>setTimeout(d=>{for(t of d.querySelectorAll('.slide template'))t.replaceWith(t.content);d.body.classList.add('strip')},innerWidth<768?3e3:0,document))</script>`;
+---
+
+<div class:list={['phero__img', { 'phero__img--slides': n > 1, 'phero__img--two': n === 2, 'phero__img--six': n === 6 }]} style={`--n:${n};--dur:${n * SLIDE}s;--reps:${reps}`}>
+  <div class="track">
+    {
+      slides.map((b, i) => (
+        <div class="slide" style={`--i:${i};--pos:${b.pos ?? '50% 50%'}`}>
+          {i === 0 ? (
+            <Pic src={b.src} alt={b.alt} widths={widths} sizes={HERO_SIZES} eager />
+          ) : (
+            <template>
+              <Pic src={b.src} alt={b.alt} widths={widths} sizes={HERO_SIZES} />
+            </template>
+          )}
+        </div>
+      ))
+    }
+    {
+      Array.from({ length: reps - 1 }).flatMap(() =>
+        slides.map((b) => (
+          <div class="slide slide--copy" aria-hidden="true">
+            <template>
+              <Pic src={b.src} alt="" widths={widths} sizes={HERO_SIZES} />
+            </template>
+          </div>
+        )),
+      )
+    }
+  </div>
+</div>
+{n > 1 && <Fragment set:html={LOADER} />}

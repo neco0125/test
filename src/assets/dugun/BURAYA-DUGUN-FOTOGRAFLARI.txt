@@ -1,0 +1,6 @@
+Düğün fotoğraflarını bu klasöre koyun (jpg, jpeg, png, webp; uzun kenarı en az 2000 px).
+Dosya adı sırayı belirler: 01-hazirlik.jpg, 02-ilk-bakis.jpg ...
+Aynı adla public/media/dugun/ klasörüne .mp4 koyarsanız (ör. 02-ilk-bakis.mp4) o kare tıklanınca video oynatır.
+Video: sessiz, 720p, H.264, faststart; kısa tutun (5-15 sn).
+Açıklamalar için: src/data/weddingGallery.ts içindeki ALT listesi.
+Klasörde görsel olunca galeri ana sayfada ve /dugun/ sayfasında kendiliğinden görünür; npm run build yeterli.

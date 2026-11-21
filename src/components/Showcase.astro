@@ -1,0 +1,64 @@
+---
+// Örnek iş: hizmet satırının altında. Kapakta sessiz kısa döngü (görününce iner),
+// videoya dokununca sesli tam video. Yatay (16:9) ya da dikey (9:16, Reels).
+import type { ImageMetadata } from 'astro';
+import { getImage } from 'astro:assets';
+import { langOf } from '../i18n';
+
+interface Props {
+  poster: ImageMetadata;
+  alt: string;
+  title: string;
+  text: string;
+  meta: string;
+  len: string;
+  /** Tam video; yoksa yalnızca GIF gösterilir (tıklanmaz) */
+  src?: string;
+  pv?: string;
+  vertical?: boolean;
+  /** Kapakta video döngüsü yerine GIF (public/ yolu) */
+  gif?: string;
+}
+const { poster, alt, title, text, meta, len, src, pv, vertical = false, gif } = Astro.props;
+
+const L = { tr: ['Örnek iş', 'Videoyu sesli oynat'], en: ['Sample work', 'Play the video with sound'], ru: ['Пример работы', 'Смотреть видео со звуком'], uk: ['Приклад роботи', 'Дивитися відео зі звуком'] }[langOf(Astro.url.pathname)];
+const widths = vertical ? [360, 540, 720] : [640, 960, 1280];
+const imgs = await Promise.all(widths.map((width) => getImage({ src: poster, width, format: 'avif', quality: 44 })));
+const srcset = imgs.map((im, i) => `${im.src} ${widths[i]}w`).join(', ');
+const sizes = vertical ? '(min-width: 56rem) 18rem, 70vw' : '(min-width: 92rem) 760px, (min-width: 56rem) 52vw, 85vw';
+const [w, h] = vertical ? [720, 1280] : [1280, 720];
+---
+
+<figure class:list={['case', { 'case--v': vertical }]}>
+  <figcaption class="case__cap">
+    <p class="alt-tag mono"><b>{L[0]}</b></p>
+    <p class="case__t">{title}</p>
+    <p class="case__txt">{text}</p>
+    <p class="case__meta mono">{meta}</p>
+  </figcaption>
+  <div class="stage case__stage">
+{src ? (
+        <a class="stage__play case__a" href={src} data-inline data-sound data-pv={gif ? undefined : pv} aria-label={`${L[1]} (${len}): ${title}`}>
+      {gif ? (
+        <picture>
+          <source type="image/webp" srcset={gif.replace(/\.gif$/, '.webp')} />
+          <img src={gif} width={w} height={h} alt={alt} loading="lazy" decoding="async" />
+        </picture>
+      ) : (
+        <img src={imgs[1].src} srcset={srcset} sizes={sizes} width={w} height={h} alt={alt} loading="lazy" decoding="async" />
+      )}
+    </a>
+    ) : gif ? (
+      <div class="stage__play case__a">
+      <picture>
+        <source type="image/webp" srcset={gif.replace(/\.gif$/, '.webp')} />
+        <img src={gif} width={w} height={h} alt={alt} loading="lazy" decoding="async" />
+      </picture>
+      </div>
+    ) : (
+      <div class="stage__play case__a" data-pv={pv}>
+        <img src={imgs[1].src} srcset={srcset} sizes={sizes} width={w} height={h} alt={alt} loading="lazy" decoding="async" />
+      </div>
+    )}
+  </div>
+</figure>

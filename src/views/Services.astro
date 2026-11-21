@@ -1,0 +1,111 @@
+---
+import { getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import HeroPreload from '../components/HeroPreload.astro';
+import Ground from '../components/Ground.astro';
+import Showcase from '../components/Showcase.astro';
+import { BTS_SLIDES } from '../data/btsSlides';
+import { SITE, pad2, wa } from '../config';
+import { r, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+import posterAcilis from '../assets/img/poster-acilis.jpg';
+import posterOffroad from '../assets/img/poster-offroad.jpg';
+import posterKebap from '../assets/img/poster-kebap.jpg';
+import posterIzgara from '../assets/img/poster-izgara.jpg';
+
+interface Props {
+  lang: XLang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const p = t.services;
+const D = t.data;
+const crumbs = [{ name: p.crumb, href: r('services', lang) }];
+
+let n = 0;
+const groups = D.groups.map((g) => ({ ...g, items: g.items.map((s) => ({ ...s, no: pad2(++n) })) }));
+const tones = ['t-night', 't-ivory', 't-night'];
+
+const W = D.works;
+const WORKS: Record<string, Parameters<typeof Showcase>[0]> = {
+  // Videosuz örnek: yalnızca hareketli görsel
+  [W.tiktok.name]: { poster: posterIzgara, alt: W.tiktok.alt, title: W.tiktok.title, text: W.tiktok.text, meta: W.tiktok.meta, len: '00:03', pv: '/media/izgara-onizleme.mp4', vertical: true },
+  [W.social.name]: { poster: posterKebap, alt: W.social.alt, title: W.social.title, text: W.social.text, meta: W.social.meta, len: '00:03', pv: '/media/kebap-onizleme.mp4', vertical: true },
+  [W.reels.name]: { poster: posterOffroad, alt: W.reels.alt, title: W.reels.title, text: W.reels.text, meta: W.reels.meta, len: '00:32', src: '/media/offroad-720.mp4', pv: '/media/offroad-onizleme.mp4', vertical: true },
+  [W.venue.name]: { poster: posterAcilis, alt: W.venue.alt, title: W.venue.title, text: W.venue.text, meta: W.venue.meta, len: '00:42', src: '/media/acilis-720.mp4', pv: '/media/acilis-onizleme.mp4' },
+};
+const DUR: Record<string, string> = { '00:42': 'PT42S', '00:32': 'PT32S' };
+const videos = await Promise.all(
+  Object.values(WORKS).filter((w) => w.src).map(async (w) => {
+    const thumb = await getImage({ src: w.poster, width: w.vertical ? 720 : 1280, format: 'jpg', quality: 72 });
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'VideoObject',
+      name: w.title,
+      description: w.text,
+      thumbnailUrl: new URL(thumb.src, SITE.url).href,
+      contentUrl: new URL(w.src!, SITE.url).href,
+      uploadDate: '2026-11-12T12:00:00+03:00',
+      duration: DUR[w.len],
+      inLanguage: lang,
+      publisher: { '@id': `${SITE.url}/#isletme` },
+    };
+  }),
+);
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: p.title,
+  itemListElement: groups
+    .flatMap((g) => g.items)
+    .map((s, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: { '@type': 'Service', name: s.name, description: s.text, areaServed: 'Alanya, Antalya', provider: { '@id': `${SITE.url}/#isletme` } },
+    })),
+};
+---
+
+<Base title={p.title} description={p.description} crumbs={crumbs} schema={[schema, ...videos]} lang={lang} overlay>
+  <HeroPreload slot="preload" src={BTS_SLIDES(lang)[0].src} />
+  <PageHead title={p.h} sub={p.sub} lead={p.lead} crumbs={crumbs} bg={BTS_SLIDES(lang)}>
+    <div class="cta-row">
+      <a class="btn" href={r('drone', lang)}>{p.drone} <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn--ghost" href={r('wedding', lang)}>{p.wedding} <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="link" href={r('photo', lang)}>{t.photo.crumb}</a>
+    </div>
+  </PageHead>
+
+  {
+    groups.map((g, gi) => (
+      <section class:list={['chap', tones[gi]]} id={g.id} aria-labelledby={`${g.id}-h`}>
+        <div class="wrap">
+          <div class="chap__hd">
+            <p class="alt-tag mono">
+              <b>{pad2(gi + 1)}</b> {g.items.length} {p.count}
+            </p>
+            <h2 class="wide l" id={`${g.id}-h`}>
+              {g.title}
+            </h2>
+            <p class="lead">{g.lead}</p>
+          </div>
+          <ul class="rows">
+            {g.items.map((s) => (
+              <li class="row">
+                <span class="row__no mono">{s.no}</span>
+                <h3>{s.name}</h3>
+                <p>{s.text}</p>
+                <a class="row__go" href={wa(t.common.waQuote(s.ask))} rel="noopener">
+                  {t.common.getQuote}<span class="sr">: {s.name}</span> <span class="arrow" aria-hidden="true">→</span>
+                </a>
+                {WORKS[s.name] && <Showcase {...WORKS[s.name]} />}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    ))
+  }
+  <Ground lang={lang} />
+</Base>

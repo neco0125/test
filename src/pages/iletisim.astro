@@ -1,0 +1,127 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import { FORM_ACTION, SITE, wa } from '../config';
+import { FORM_SERVICES } from '../data/services';
+
+const crumbs = [{ name: 'İletişim', href: '/iletisim/' }];
+const description =
+  'Necip Bozdemir ile iletişim: telefon ve WhatsApp +90 551 032 05 31, Alanya, Antalya. Düğün, drone ve video çekimi için ücretsiz teklif formu.';
+const viaWhatsApp = FORM_ACTION === '';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: 'İletişim',
+  url: `${SITE.url}/iletisim/`,
+  mainEntity: { '@id': `${SITE.url}/#isletme` },
+};
+---
+
+<Base title="İletişim: Alanya drone ve düğün çekimi" description={description} crumbs={crumbs} schema={[schema]} serifAbove>
+  <PageHead title="İletişim" sub="tarihinizi sorun." lead="En hızlı yol WhatsApp. Ayrıntıyı yazıyla vermek isterseniz aşağıdaki formu doldurun." crumbs={crumbs} />
+
+  <section class="chap t-night" aria-labelledby="i1" style="padding-top:0">
+   <div class="wrap split">
+    <div><p class="alt-tag mono"><b>01</b> Bilgiler</p><h2 class="sr" id="i1">İletişim bilgileri</h2></div>
+    <dl class="facts">
+      <div>
+        <dt class="mono">Telefon ve WhatsApp</dt>
+        <dd class="big"><a href={`tel:${SITE.phoneE164}`}>{SITE.phoneDisplay}</a></dd>
+        <dd style="grid-column:2"><a href={wa()} rel="noopener">WhatsApp’tan yazın</a></dd>
+      </div>
+      <div>
+        <dt class="mono">Instagram</dt>
+        <dd><a href={SITE.instagram} rel="noopener">{SITE.instagramHandle}</a></dd>
+      </div>
+      <div>
+        <dt class="mono">Konum</dt>
+        <dd>Alanya, Antalya, Türkiye</dd>
+        <dd class="mono" style="grid-column:2">{SITE.coords}</dd>
+      </div>
+      <div>
+        <dt class="mono">Çalışma saatleri</dt>
+        {SITE.hours.map((h) => <dd style="grid-column:2">{h.days}: {h.time}</dd>)}
+      </div>
+    </dl>
+   </div>
+  </section>
+
+  <section class="chap t-ivory" id="form" aria-labelledby="i2">
+   <div class="wrap split">
+    <div>
+    <p class="alt-tag mono"><b>02</b> Form</p>
+    <h2 class="wide m" id="i2" style="margin-top:1.25rem">Teklif formu</h2>
+    <p class="copy" style="margin-top:1.25rem">
+      Yıldızlı alanlar zorunlu. {
+        viaWhatsApp
+          ? 'Gönder’e bastığınızda yazdıklarınız WhatsApp’ta hazır bir mesaja dönüşür, son kez bakıp gönderirsiniz.'
+          : 'Yazdıklarınız bize e-postayla ulaşır.'
+      }
+    </p>
+    </div>
+    <form
+      class="form"
+      action={viaWhatsApp ? undefined : FORM_ACTION}
+      method="post"
+      data-form
+      data-wa={viaWhatsApp ? `https://wa.me/${SITE.waNumber}?text=` : undefined}
+      
+    >
+      <div>
+        <label for="ad">Adınız soyadınız *</label>
+        <input id="ad" name="ad" type="text" autocomplete="name" required />
+      </div>
+      <div>
+        <label for="telefon">Telefon *</label>
+        <input id="telefon" name="telefon" type="tel" autocomplete="tel" inputmode="tel" required />
+      </div>
+      <div>
+        <label for="eposta">E-posta</label>
+        <input id="eposta" name="eposta" type="email" autocomplete="email" />
+      </div>
+      <div>
+        <label for="hizmet">Hizmet türü *</label>
+        <select id="hizmet" name="hizmet" required>
+          <option value="">Seçiniz…</option>
+          {FORM_SERVICES.map((s) => <option>{s}</option>)}
+        </select>
+      </div>
+      <div>
+        <label for="tarih">Planlanan tarih</label>
+        <input id="tarih" name="tarih" type="date" />
+      </div>
+      <div class="full">
+        <label for="mesaj">Mesajınız *</label>
+        <textarea id="mesaj" name="mesaj" rows="6" required></textarea>
+      </div>
+      <div class="hp" aria-hidden="true">
+        <label for="_honey">Bu alanı boş bırakın</label>
+        <input id="_honey" name="_honey" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+      {
+        !viaWhatsApp && (
+          <>
+            <input type="hidden" name="_subject" value="Siteden teklif isteği" />
+            <input type="hidden" name="_template" value="table" />
+            <input type="hidden" name="_next" value={new URL('/tesekkurler/', SITE.url).href} />
+            <input type="hidden" name="_replyto" value="" />
+          </>
+        )
+      }
+      <div class="full">
+        <button class="btn" type="submit" disabled={viaWhatsApp}>{viaWhatsApp ? 'WhatsApp ile gönder' : 'Teklif iste'}</button>
+      </div>
+      <p class="note full">
+        Yazdığınız bilgileri yalnızca isteğinizi yanıtlamak için kullanırız. Ayrıntısı <a href="/kvkk/">KVKK aydınlatma metninde</a>.
+      </p>
+      <noscript>
+        <p class="note full">
+          Tarayıcınızda JavaScript kapalıysa form çalışmaz. Bize <a href={wa('Merhaba, teklif almak istiyorum.')}>WhatsApp’tan</a> ya da telefonla
+          ulaşabilirsiniz.
+        </p>
+      </noscript>
+    </form>
+   </div>
+  </section>
+</Base>

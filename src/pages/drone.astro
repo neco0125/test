@@ -1,0 +1,173 @@
+---
+import Base from '../layouts/Base.astro';
+import Pic from '../components/Pic.astro';
+import Reel from '../components/Reel.astro';
+import Faq from '../components/Faq.astro';
+import Ground from '../components/Ground.astro';
+import { SITE, pad2, wa } from '../config';
+import { DRONE_DELIVER, DRONE_FAQ, DRONE_PROCESS, DRONE_USES } from '../data/content';
+import yacht from '../assets/img/yat-drone.jpg';
+import Showcase from '../components/Showcase.astro';
+import posterKonum from '../assets/img/poster-konum.jpg';
+
+// "Ne çekiyoruz" satırının altında gösterilen örnek iş (anahtar: kullanım adı)
+const WORKS: Record<string, Parameters<typeof Showcase>[0]> = {
+  'Konum videosu': {
+    poster: posterKonum,
+    alt: 'Alanya’da sahil boyunca uzanan cadde, oteller ve park havadan; caddenin ucunda bir kuaför salonunun yerini gösteren etiket',
+    title: 'Kuaför salonu konum videosu',
+    text: 'Sahil caddesinin üstünden uçup yoldaki otelleri işaretledik ve salonun yerini etiketle gösterdik. Video dikey, müzikli.',
+    meta: 'drone · 9:16 dikey · 00:23 · müzikli',
+    len: '00:23',
+    src: '/media/konum.mp4',
+    pv: '/media/konum-onizleme.mp4',
+    vertical: true,
+  },
+};
+
+const title = 'Alanya drone çekimi: otel, yat ve mekân';
+const description =
+  'Alanya ve Antalya’da drone çekimi: otel, yat, restoran, düğün ve etkinlik için havadan video. 4K 50/60 fps, renk düzenlenmiş kurgu, yatay ve dikey kesim.';
+const crumbs = [{ name: 'Drone çekimi', href: '/drone/' }];
+
+const service = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Drone çekimi',
+  serviceType: 'Havadan video ve fotoğraf çekimi',
+  description,
+  areaServed: [
+    { '@type': 'City', name: 'Alanya' },
+    { '@type': 'City', name: 'Antalya' },
+  ],
+  provider: { '@id': `${SITE.url}/#isletme`, '@type': 'ProfessionalService', name: SITE.name, telephone: SITE.phoneE164 },
+  url: `${SITE.url}/drone/`,
+};
+const faq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: DRONE_FAQ.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base title={title} description={description} crumbs={crumbs} schema={[service, faq]} overlay altimeter serifAbove>
+  <section class="phero phero--boat t-night" aria-labelledby="d-h">
+    <div class="phero__img">
+      <Pic
+        src={yacht}
+        widths={[960, 1440, 1920, 2752]}
+        sizes="max(100vw, min(179vh, 111rem))"
+        avifQuality={54}
+        webpQuality={72}
+        alt="Turkuaz denizde ilerleyen beyaz bir yatın tam üstten çekilmiş drone görüntüsü"
+        eager
+      />
+    </div>
+    <div class="phero__body wrap">
+      <nav class="crumb mono" aria-label="Kırıntı yolu">
+        <ol><li><a href="/">Ana sayfa</a></li><li><span aria-current="page">Drone çekimi</span></li></ol>
+      </nav>
+      <h1 id="d-h">
+        <span class="sr">Alanya drone çekimi: </span>
+        <span class="wide xl">Drone</span>
+        <span class="serif">yukarıdan.</span>
+      </h1>
+      <p class="lead">Alanya ve Antalya’da drone çekimi. Otel, yat, mekân ve etkinlik için havadan tanıtım videosu.</p>
+      <div class="cta-row">
+        <a class="btn" href={wa('Merhaba, drone çekimi için teklif almak istiyorum.')} rel="noopener">Drone çekimi için yazın <span class="arrow" aria-hidden="true">→</span></a>
+        <a class="link" href="#makara">Klipleri izleyin</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="chap t-teal" id="makara" aria-labelledby="m-h">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 90 m</b> Makara</p>
+        <h2 class="wide l" id="m-h">Dört klip</h2>
+        <p class="lead">Bir otel, bir gece etkinliğinin ham görüntüsü, renk düzenlenmiş bir kurgu ve bir gece konseri.</p>
+      </div>
+      <Reel schema />
+    </div>
+  </section>
+
+  <section class="chap t-night" aria-labelledby="u-h">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 60 m</b> Nerede kullanılır</p>
+        <h2 class="wide l" id="u-h">Ne çekiyoruz</h2>
+      </div>
+      <ul class="rows">
+        {
+          DRONE_USES.map((u, i) => (
+            <li class="row">
+              <span class="row__no mono">{pad2(i + 1)}</span>
+              <h3>{u.name}</h3>
+              <p>{u.text}</p>
+              <a class="row__go" href={wa(`Merhaba, ${u.name.toLocaleLowerCase('tr')} için drone çekimi teklifi almak istiyorum.`)} rel="noopener">
+                Teklif al<span class="sr">: {u.name}</span> <span class="arrow" aria-hidden="true">→</span>
+              </a>
+              {WORKS[u.name] && <Showcase {...WORKS[u.name]} />}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="chap t-night" aria-labelledby="t-h" style="padding-top:0">
+    <div class="wrap split">
+      <div>
+        <p class="alt-tag mono"><b>ALT 40 m</b> Teslim</p>
+        <h2 class="wide m" id="t-h" style="margin-top:1.25rem">Ne teslim ediyoruz</h2>
+      </div>
+      <dl class="kv">
+        {
+          DRONE_DELIVER.map((f) => (
+            <div>
+              <dt class="mono">{f.k}</dt>
+              <dd>{f.v}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" aria-labelledby="s-h">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 20 m</b> Süreç</p>
+        <h2 id="s-h" style="display:grid">
+          <span class="wide l">Görüşmeden</span>
+          <span class="serif l" style="padding-left:clamp(1rem,8vw,9rem)">teslime.</span>
+        </h2>
+      </div>
+      <ol class="steps">
+        {
+          DRONE_PROCESS.map((s) => (
+            <li>
+              <b>{s.name}</b>
+              <p>{s.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" aria-labelledby="f-h" style="padding-top:0">
+    <div class="wrap split" style="padding-top:clamp(3rem,6vw,5rem);border-top:1px solid var(--rule)">
+      <div>
+        <p class="alt-tag mono"><b>ALT 5 m</b> Sorular</p>
+        <h2 class="serif l" id="f-h" style="margin-top:1.25rem">Sık sorulanlar</h2>
+      </div>
+      <div>
+        <Faq items={DRONE_FAQ} />
+        <p class="copy" style="margin-top:1.25rem">Fiyatı neyin belirlediği <a href="/blog/drone-cekimi-fiyatlari/">drone çekimi fiyatları</a> yazısında, otel ve yat çekimi için hazırlık listesi <a href="/blog/otel-yat-drone-tanitim-videosu/">otel ve yat tanıtım videosu</a> yazısında. Nerede uçulur sorusu için <a href="/blog/alanya-drone-cekim-noktalari/">Alanya drone çekim noktaları</a> ve <a href="/blog/antalya-drone-cekimi/">Antalya drone çekimi</a>, düğün günü için <a href="/blog/drone-dugun-cekimi/">düğünde drone</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <Ground waText="Merhaba, drone çekimi için tarih sormak istiyorum." />
+</Base>

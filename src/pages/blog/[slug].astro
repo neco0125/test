@@ -1,0 +1,155 @@
+---
+import { getCollection, render } from 'astro:content';
+import { getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Pic from '../../components/Pic.astro';
+import { blogAlts } from '../../lib/blogAlts';
+import { SITE, isoDate, trDate, wa } from '../../config';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post, all: posts } }));
+}
+
+const { post, all } = Astro.props;
+const { Content } = await render(post);
+const { title, description, date, updated, category, readingTime, cta, waText, cover, coverAlt, related } = post.data;
+const url = `${SITE.url}/blog/${post.id}/`;
+const modified = updated ?? date;
+// Diğer dillerdeki karşılıklar: translationKey bu yazının slug'ı olanlar
+const alts = await blogAlts(post.id);
+const crumbs = [
+  { name: 'Blog', href: '/blog/' },
+  { name: title, href: `/blog/${post.id}/` },
+];
+
+// Paylaşım görseli: kapak varsa 1200x630 kırpılmış JPEG
+const og = cover ? await getImage({ src: cover, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 72 }) : undefined;
+
+// "## Sık sorulanlar" bölümündeki ### soru + ilk paragraf cevap -> FAQPage
+const plain = (s: string) =>
+  s
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/[*_`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+const faqBlock = (post.body ?? '').split(/^## Sık sorulanlar\s*$/m)[1]?.split(/^## /m)[0] ?? '';
+const faq = faqBlock
+  .split(/^### /m)
+  .slice(1)
+  .map((chunk) => {
+    const [q, ...rest] = chunk.split('\n');
+    const a = rest.join('\n').trim().split(/\n\s*\n/)[0] ?? '';
+    return { q: plain(q), a: plain(a) };
+  })
+  .filter((f) => f.q && f.a);
+
+// Yazı sonunda üç öneri: önce frontmatter'daki, sonra aynı kategorideki komşu yazılar (döngüsel), sonra tüm yazılarda komşular.
+// Komşu seçimi iç bağlantıları yazılara eşit dağıtır; "en yeniler" seçimi tüm bağlantıyı birkaç yeni yazıya topluyordu.
+const byDate = [...all].sort((a, b) => b.data.date.getTime() - a.data.date.getTime() || a.id.localeCompare(b.id));
+const around = (list: typeof all) => {
+  const i = list.findIndex((p) => p.id === post.id);
+  const n = list.length;
+  return [1, -1, 2, -2, 3, -3].map((d) => list[(((i + d) % n) + n) % n]);
+};
+// Dört öneri: en fazla iki elle seçilmiş + en az iki komşu, böylece her yazı en az iki yazıdan bağlantı alır.
+const curated = (related ?? []).map((id) => all.find((p) => p.id === id)).filter((p) => p !== undefined).slice(0, 2);
+const picks = [...curated, ...around(byDate.filter((p) => p.data.category === category)), ...around(byDate)]
+  .filter((p) => p.id !== post.id)
+  .filter((p, i, arr) => arr.findIndex((x) => x.id === p.id) === i)
+  .slice(0, 4);
+
+const schema: Record<string, unknown>[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: title,
+    description,
+    datePublished: isoDate(date),
+    dateModified: isoDate(modified),
+    inLanguage: 'tr',
+    articleSection: category,
+    mainEntityOfPage: url,
+    image: og ? new URL(og.src, SITE.url).href : `${SITE.url}/og.jpg`,
+    author: { '@type': 'Person', '@id': `${SITE.url}/hakkimizda/#necip`, name: SITE.name, url: `${SITE.url}/hakkimizda/` },
+    publisher: { '@id': `${SITE.url}/#isletme`, '@type': 'Organization', name: SITE.name, url: `${SITE.url}/` },
+  },
+];
+if (faq.length)
+  schema.push({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  });
+---
+
+<Base
+  title={title}
+  description={description}
+  crumbs={crumbs}
+  schema={schema}
+  ogType="article"
+  ogImage={og?.src}
+  ogImageAlt={cover ? coverAlt : undefined}
+  theme="ivory"
+  alts={alts}
+>
+  <meta slot="head" property="article:published_time" content={isoDate(date)} />
+  <meta slot="head" property="article:modified_time" content={isoDate(modified)} />
+  <article>
+    <header class="page-hd post-hd wrap grid">
+      <nav class="crumb mono" aria-label="Kırıntı yolu">
+        <ol>
+          <li><a href="/">Ana sayfa</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><span aria-current="page">{category}</span></li>
+        </ol>
+      </nav>
+      <h1>{title}</h1>
+      <p class="post-hd__meta mono">
+        <span><span class="dot"></span>{category}</span>
+        <time datetime={isoDate(date)}>{trDate(date)}</time>
+        {updated && <span>Güncellendi: <time datetime={isoDate(updated)}>{trDate(updated)}</time></span>}
+        <span>{readingTime} dk okuma</span>
+        <span>Yazan: <a href="/hakkimizda/">Necip Bozdemir</a></span>
+      </p>
+    </header>
+
+    <div class="wrap article">
+      <p class="article__side mono"><a href="/blog/">← Tüm yazılar</a></p>
+      <div class="article__main">
+        {
+          cover && (
+            <figure class="post-cover">
+              <Pic src={cover} alt={coverAlt ?? ''} widths={[480, 800, 1200]} sizes="(min-width: 56rem) 46rem, 92vw" eager />
+            </figure>
+          )
+        }
+        <div class="prose">
+          <Content />
+        </div>
+        <aside class="endcta" aria-label="Teklif">
+          <p>{cta}</p>
+          <div class="cta-row">
+            <a class="btn" href={wa(waText)} rel="noopener">WhatsApp’tan yazın <span class="arrow" aria-hidden="true">→</span></a>
+            <a class="link" href="/iletisim/#form">Teklif formu</a>
+          </div>
+        </aside>
+        <nav class="related" aria-labelledby="rel-h">
+          <h2 class="related__h mono" id="rel-h">Bunlar da ilginizi çekebilir</h2>
+          <ul>
+            {
+              picks.map((p) => (
+                <li>
+                  <a href={`/blog/${p.id}/`}>{p.data.title}</a>
+                  <span class="mono">{p.data.category}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+        <p class="printurl mono">{url} · {SITE.phoneDisplay}</p>
+      </div>
+    </div>
+  </article>
+</Base>

@@ -1,0 +1,61 @@
+---
+// İç sayfaların başı: kırıntı yolu, iki sesli başlık, giriş cümlesi.
+// bg verilirse başlık tam genişlik fotoğrafların üstünde durur (phero); birden çok kare sırayla
+// geçer (CSS, hareket azaltılmışsa yalnız ilk kare). İlk kare dışındakiler <template> içinde gelir,
+// sayfa yüklendikten 3 sn sonra eklenir: LCP görseliyle bant genişliği yarışmasınlar. slot butonlar için.
+import type { ImageMetadata } from 'astro';
+import HeroSlides from './HeroSlides.astro';
+import { UI, langOf, r } from '../i18n';
+interface Props {
+  title: string;
+  /** İtalik serif ikinci satır (isteğe bağlı) */
+  sub?: string;
+  lead?: string;
+  crumbs: { name: string; href: string }[];
+  size?: 'l' | 'xl';
+  bg?: { src: ImageMetadata; alt: string; pos?: string }[];
+}
+const { title, sub, lead, crumbs, size = 'l', bg } = Astro.props;
+const lang = langOf(Astro.url.pathname);
+const trail = [{ name: UI[lang].home, href: r('home', lang) }, ...crumbs];
+---
+
+{
+  bg ? (
+    <section class="phero phero--hd t-night">
+      <HeroSlides slides={bg} />
+      <div class="phero__body wrap">
+        <nav class="crumb mono" aria-label={UI[lang].crumb}>
+          <ol>
+            {trail.map((c, i) => (
+              <li>{i < trail.length - 1 ? <a href={c.href}>{c.name}</a> : <span aria-current="page">{c.name}</span>}</li>
+            ))}
+          </ol>
+        </nav>
+        <h1>
+          <span class:list={['wide', size]}>{title}</span>
+          {sub && <span class="serif">{sub}</span>}
+        </h1>
+        {lead && <p class="lead">{lead}</p>}
+        <slot />
+      </div>
+    </section>
+  ) : (
+    <div class="page-hd wrap grid">
+      <nav class="crumb mono" aria-label={UI[lang].crumb}>
+        <ol>
+          {
+            trail.map((c, i) => (
+              <li>{i < trail.length - 1 ? <a href={c.href}>{c.name}</a> : <span aria-current="page">{c.name}</span>}</li>
+            ))
+          }
+        </ol>
+      </nav>
+      <h1>
+        <span class:list={['wide', size]}>{title}</span>
+        {sub && <span class="serif">{sub}</span>}
+      </h1>
+      {lead && <p class="lead">{lead}</p>}
+    </div>
+  )
+}

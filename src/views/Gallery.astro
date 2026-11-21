@@ -1,0 +1,121 @@
+---
+// Galeri (dört dil). Her kutu: kapak görseli + görününce inen sessiz döngü; dokununca tam video kutunun içinde oynar.
+import { getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Ground from '../components/Ground.astro';
+import { SITE, pad2 } from '../config';
+import { r, type Lang } from '../i18n';
+import { GALLERY, GALLERY_PAGE } from '../data/gallery';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const p = GALLERY_PAGE[lang];
+const url = r('gallery', lang);
+const crumbs = [{ name: p.h, href: url }];
+
+const items = await Promise.all(
+  GALLERY.map(async (g) => {
+    const widths = g.vertical ? [360, 540, 720] : [480, 720, 960, 1280];
+    const imgs = await Promise.all(widths.map((width) => getImage({ src: g.poster, width, format: 'avif', quality: 44 })));
+    const thumb = await getImage({ src: g.poster, width: g.vertical ? 720 : 1280, format: 'jpg', quality: 72 });
+    return { ...g, img: imgs[1].src, srcset: imgs.map((im, i) => `${im.src} ${widths[i]}w`).join(', '), thumb: thumb.src };
+  }),
+);
+const SIZES = '(min-width: 72rem) 30vw, (min-width: 40rem) 46vw, 92vw';
+const dur = (len: string) => `PT${Number(len.split(':')[0]) * 60 + Number(len.split(':')[1])}S`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: p.title,
+  url: `${SITE.url}${url}`,
+  inLanguage: lang,
+  about: { '@id': `${SITE.url}/#isletme` },
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: items.map((g, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: !g.src && !g.pv ? {
+        // Videosuz kutu: hareketli görsel
+        '@type': 'ImageObject',
+        ...(lang === 'tr' ? { url: `${SITE.url}/galeri/${g.id}/` } : {}),
+        name: g.title[lang],
+        description: `${g.alt[lang]}. ${g.meta[lang]}.`,
+        contentUrl: new URL(g.gif!.replace(/\.gif$/, '.webp'), SITE.url).href,
+        thumbnailUrl: new URL(g.thumb, SITE.url).href,
+      } : {
+        '@type': 'VideoObject',
+        ...(lang === 'tr' ? { '@id': `${SITE.url}/galeri/${g.id}/#video`, url: `${SITE.url}/galeri/${g.id}/` } : {}),
+        name: g.title[lang],
+        description: `${g.alt[lang]}. ${g.meta[lang]}.`,
+        thumbnailUrl: new URL(g.thumb, SITE.url).href,
+        contentUrl: new URL((g.src ?? g.pv)!, SITE.url).href,
+        uploadDate: '2026-11-12T12:00:00+03:00',
+        duration: dur(g.len),
+        publisher: { '@id': `${SITE.url}/#isletme` },
+      },
+    })),
+  },
+};
+---
+
+<Base title={p.title} description={p.description} crumbs={crumbs} schema={[schema]} serifAbove lang={lang}>
+  <PageHead title={p.h} sub={p.sub} lead={p.lead} crumbs={crumbs} />
+  <section class="wrap gal-wall" aria-label={p.h}>
+    {
+      items.map((g, i) => (
+        <figure class:list={['gtile', { 'gtile--v': g.vertical }]}>
+          <div class="stage gtile__stage">
+            {g.src ? (
+              <a
+                class="stage__play case__a"
+                href={g.src}
+                data-inline
+                data-sound={g.sound ? '' : undefined}
+                data-pv={g.gif ? undefined : g.pv}
+                aria-label={`${p.play} (${g.len}): ${g.title[lang]}`}
+              >
+                {/* GIF'li kutu: kapak yerine GIF döner (tembel iner); dokununca yine sesli tam video */}
+                {g.gif ? (
+                  <picture>
+                    <source type="image/webp" srcset={g.gif.replace(/\.gif$/, '.webp')} />
+                    <img src={g.gif} width={720} height={1280} style="object-position:50% 0" alt={g.alt[lang]} loading={i < 3 ? 'eager' : 'lazy'} decoding="async" />
+                  </picture>
+                ) : (
+                <img src={g.img} srcset={g.srcset} sizes={SIZES} width={g.vertical ? 720 : 1280} height={g.vertical ? 1280 : 720} alt={g.alt[lang]} loading={i < 3 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} decoding="async" />
+                )}
+              </a>
+            ) : g.gif && !g.pv ? (
+              <div class="stage__play case__a">
+                {/* Videosuz kutu: yalnızca hareketli görsel (WebP, eski tarayıcıya GIF) */}
+                <picture>
+                  <source type="image/webp" srcset={g.gif.replace(/\.gif$/, '.webp')} />
+                  <img src={g.gif} width={g.vertical ? 720 : 1280} height={g.vertical ? 1280 : 720} style="object-position:50% 0" alt={g.alt[lang]} loading={i < 3 ? 'eager' : 'lazy'} decoding="async" />
+                </picture>
+              </div>
+            ) : (
+              <div class="stage__play case__a" data-pv={g.pv}>
+                <img src={g.img} srcset={g.srcset} sizes={SIZES} width={g.vertical ? 720 : 1280} height={g.vertical ? 1280 : 720} alt={g.alt[lang]} loading={i < 3 ? 'eager' : 'lazy'} decoding="async" />
+              </div>
+            )}
+          </div>
+          <figcaption class="gtile__cap">
+            <span class="gtile__no mono">{pad2(i + 1)} · {g.tag[lang]}</span>
+            {lang === 'tr' ? (
+              <a class="gtile__t" href={`/galeri/${g.id}/`}>{g.title[lang]}</a>
+            ) : (
+              <span class="gtile__t">{g.title[lang]}</span>
+            )}
+            <span class="gtile__meta mono">{g.meta[lang]}</span>
+          </figcaption>
+        </figure>
+      ))
+    }
+  </section>
+  <p class="wrap copy gal-note">{p.note}</p>
+  <Ground lang={lang} />
+</Base>

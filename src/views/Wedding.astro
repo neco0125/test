@@ -1,0 +1,141 @@
+---
+import Base from '../layouts/Base.astro';
+import WeddingDay from '../components/WeddingDay.astro';
+import HeroSlides from '../components/HeroSlides.astro';
+import HeroPreload from '../components/HeroPreload.astro';
+import { WEDDING_SLIDES } from '../data/btsSlides';
+import Faq from '../components/Faq.astro';
+import Ground from '../components/Ground.astro';
+import { SITE, pad2, wa } from '../config';
+import { UI, r, type XLang } from '../i18n';
+import { COPY } from '../data/i18n';
+
+interface Props {
+  lang: XLang;
+}
+const { lang } = Astro.props;
+const t = COPY[lang];
+const p = t.wedding;
+const D = t.data;
+const url = r('wedding', lang);
+const crumbs = [{ name: p.crumb, href: url }];
+const slides = WEDDING_SLIDES(lang);
+
+const service = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: p.serviceName,
+  serviceType: p.serviceName,
+  description: p.description,
+  areaServed: [
+    { '@type': 'City', name: 'Alanya' },
+    { '@type': 'City', name: 'Antalya' },
+  ],
+  provider: { '@id': `${SITE.url}/#isletme`, '@type': 'ProfessionalService', name: SITE.name, telephone: SITE.phoneE164 },
+  url: `${SITE.url}${url}`,
+};
+const faq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: D.weddingFaq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+---
+
+<Base title={p.title} description={p.description} crumbs={crumbs} schema={[service, faq]} theme="ivory" altimeter serifAbove lang={lang} overlay>
+  <HeroPreload slot="preload" src={slides[0].src} />
+  <section class="phero phero--w t-night" aria-labelledby="w-h">
+    <HeroSlides slides={slides} />
+    <div class="phero__body wrap">
+      <nav class="crumb mono" aria-label={UI[lang].crumb}>
+        <ol>
+          <li><a href={r('home', lang)}>{UI[lang].home}</a></li>
+          <li><span aria-current="page">{p.crumb}</span></li>
+        </ol>
+      </nav>
+      <h1 id="w-h">
+        <span class="sr">{p.h1sr}</span>
+        <span class="wide l">{p.h1a}</span>
+        <span class="serif">{p.h1b}</span>
+      </h1>
+      <p class="lead">{p.lead}</p>
+      <div class="cta-row">
+        <a class="btn" href={wa(p.waCta)} rel="noopener">{UI[lang].askDate} <span class="arrow" aria-hidden="true">→</span></a>
+        <a class="link" href="#day">{p.howDay}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" id="day" aria-labelledby="g-h" style="border-top:1px solid var(--rule)">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 1,7 m</b> {p.dayTag}</p>
+        <h2 id="g-h" style="display:grid">
+          <span class="serif l">{p.dayA}</span>
+          <span class="wide l" style="padding-left:clamp(1rem,8vw,9rem)">{p.dayB}</span>
+        </h2>
+        <p class="lead">{p.dayLead}</p>
+      </div>
+      <WeddingDay items={D.weddingDay} />
+    </div>
+  </section>
+
+  <section class="chap t-night" aria-labelledby="r-h">
+    <div class="wrap split">
+      <div>
+        <p class="alt-tag mono"><b>ALT 1,2 m</b> {p.receiveTag}</p>
+        <h2 class="wide m" id="r-h" style="margin-top:1.25rem">{p.receiveH}</h2>
+        <p class="copy" style="margin-top:1.25rem">{p.receiveLead}</p>
+      </div>
+      <ol class="rows">
+        {
+          D.weddingReceive.map((x, i) => (
+            <li class="row row--3">
+              <span class="row__no mono">{pad2(i + 1)}</span>
+              <h3>{x.name}</h3>
+              <p>{x.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="chap t-teal" aria-labelledby="e-h">
+    <div class="wrap">
+      <div class="chap__hd">
+        <p class="alt-tag mono"><b>ALT 1 m</b> {p.extrasTag}</p>
+        <h2 id="e-h" style="display:grid">
+          <span class="wide l">{p.extrasA}</span>
+          <span class="serif l" style="padding-left:clamp(1rem,8vw,9rem)">{p.extrasB}</span>
+        </h2>
+      </div>
+      <ul class="rows">
+        {
+          D.weddingExtras.map((s, i) => (
+            <li class="row">
+              <span class="row__no mono">{pad2(i + 1)}</span>
+              <h3>{s.name}</h3>
+              <p>{s.text}</p>
+              <a class="row__go" href={wa(t.common.waQuote(s.ask))} rel="noopener">
+                {t.common.getQuote}<span class="sr">: {s.name}</span> <span class="arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="chap t-ivory" aria-labelledby="f-h">
+    <div class="wrap split">
+      <div>
+        <p class="alt-tag mono"><b>ALT 0,5 m</b> {t.common.faqTitle}</p>
+        <h2 class="serif l" id="f-h" style="margin-top:1.25rem">{t.common.faqH}</h2>
+        <p class="copy" style="margin-top:1.25rem" set:html={p.faqCopy} />
+      </div>
+      <Faq items={D.weddingFaq} />
+    </div>
+  </section>
+
+  <Ground lang={lang} waText={p.waCta} />
+</Base>

@@ -1,0 +1,157 @@
+---
+import { getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import HeroPreload from '../components/HeroPreload.astro';
+import Ground from '../components/Ground.astro';
+import Showcase from '../components/Showcase.astro';
+import { BTS_SLIDES } from '../data/btsSlides';
+import { SITE, pad2, wa } from '../config';
+import { GROUPS } from '../data/services';
+import posterAcilis from '../assets/img/poster-acilis.jpg';
+import posterOffroad from '../assets/img/poster-offroad.jpg';
+import posterKebap from '../assets/img/poster-kebap.jpg';
+import posterIzgara from '../assets/img/poster-izgara.jpg';
+
+const crumbs = [{ name: 'Hizmetler', href: '/hizmetler/' }];
+const description =
+  'Alanya ve Antalya’da drone çekimi, düğün fotoğrafı ve klibi, Save the Date, nişan, kına, aile çekimi, Reels, kurumsal tanıtım filmi ve ürün fotoğrafı.';
+
+let n = 0;
+const groups = GROUPS.map((g) => ({ ...g, items: g.items.map((s) => ({ ...s, no: pad2(++n) })) }));
+const tones = ['t-night', 't-ivory', 't-night'];
+
+// Hizmet satırının altında gösterilen örnek işler (anahtar: hizmet adı)
+const WORKS: Record<string, Parameters<typeof Showcase>[0]> = {
+  // Videosuz örnek: yalnızca hareketli görsel
+  'TikTok video çekimi': {
+    poster: posterIzgara,
+    alt: 'Mangalda közün üstünde Adana kebap, tavuk ve et şişler; arkada yükselen yoğun duman',
+    title: 'Restoran Reels’i: mangal ve duman',
+    text: 'Bir kebap restoranı için dikey tanıtım videosu çekip müziğe göre kurguladık. Bu döngü mangal planlarından.',
+    meta: '9:16 dikey · TikTok ve Reels',
+    len: '00:03',
+    pv: '/media/izgara-onizleme.mp4',
+    vertical: true,
+  },
+  'Sosyal medya içerik üretimi': {
+    poster: posterKebap,
+    alt: 'Bir kebapçının mutfağında şişe işlenen kıyma, kazandan alınan çorba ve odun ateşli fırın; her plan aynı karenin çizgi roman çizimine dönüşüyor',
+    title: 'Kebapçı için Reels: gerçekten çizgi romana',
+    text: 'Bir kebapçının mutfağını çektik. Her plan, aynı karenin çizgi roman çizimine dönüşüyor. Kurgu dikey, Instagram Reels ve TikTok için.',
+    meta: '9:16 dikey · Reels ve TikTok',
+    len: '00:03',
+    pv: '/media/kebap-onizleme.mp4',
+    vertical: true,
+  },
+  'Instagram Reels': {
+    poster: posterOffroad,
+    alt: 'Toprak hendeğe dalan beyaz bir 4x4 aracın önünde yükselen toz bulutu',
+    title: 'Off-road etkinliği Reels',
+    text: 'Yayladaki çamur ve hendek parkurunu yerden ve drone ile çekip müzikle dikey Reels olarak kurguladık.',
+    meta: '9:16 dikey · 00:32 · müzikli',
+    len: '00:32',
+    src: '/media/offroad-720.mp4',
+    pv: '/media/offroad-onizleme.mp4',
+    vertical: true,
+  },
+  'Mekân tanıtım videosu': {
+    poster: posterAcilis,
+    alt: 'Balonlarla süslenmiş caddede çelenklerin önünde açılış için toplanan kalabalık',
+    title: 'Tekinoğlu Kuyumculuk açılışı',
+    text: 'Bir kuyumcu açılışını baştan sona çekip müzikle kurguladık: altın vitrinler, kalabalık, kurdele kesimi ve tebrikler.',
+    meta: '4K çekim · 00:42 · müzikli',
+    len: '00:42',
+    src: '/media/acilis-720.mp4',
+    pv: '/media/acilis-onizleme.mp4',
+  },
+};
+
+// Örnek işler için VideoObject (Google Videolar). Süre ISO 8601.
+const DUR: Record<string, string> = { '00:42': 'PT42S', '00:32': 'PT32S' };
+const videos = await Promise.all(
+  Object.values(WORKS).filter((w) => w.src).map(async (w) => {
+    const thumb = await getImage({ src: w.poster, width: w.vertical ? 720 : 1280, format: 'jpg', quality: 72 });
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'VideoObject',
+      name: w.title,
+      description: w.text,
+      thumbnailUrl: new URL(thumb.src, SITE.url).href,
+      contentUrl: new URL(w.src!, SITE.url).href,
+      uploadDate: '2026-11-12T12:00:00+03:00',
+      duration: DUR[w.len],
+      inLanguage: 'tr',
+      publisher: { '@id': `${SITE.url}/#isletme` },
+    };
+  }),
+);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Necip Bozdemir hizmetleri',
+  itemListElement: groups
+    .flatMap((g) => g.items)
+    .map((s, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: { '@type': 'Service', name: s.name, description: s.text, areaServed: 'Alanya, Antalya', provider: { '@id': `${SITE.url}/#isletme` } },
+    })),
+};
+---
+
+<Base title="Alanya fotoğraf ve video çekimi hizmetleri" description={description} crumbs={crumbs} schema={[schema, ...videos]} overlay>
+  <HeroPreload slot="preload" src={BTS_SLIDES('tr')[0].src} />
+  <PageHead
+    title="Hizmetler"
+    sub="hepsi bir arada."
+    lead="On altı hizmet, üç başlık. Ağırlığımız drone ve düğünde. Satır sonundaki bağlantı WhatsApp’ta hazır bir mesaj açar."
+    crumbs={crumbs}
+    bg={BTS_SLIDES('tr')}
+  >
+    <div class="cta-row">
+      <a class="btn" href="/drone/">Drone çekimi <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn--ghost" href="/dugun/">Düğün filmi ve fotoğraf <span class="arrow" aria-hidden="true">→</span></a>
+    </div>
+  </PageHead>
+
+  {
+    groups.map((g, gi) => (
+      <section class:list={['chap', tones[gi]]} id={g.id} aria-labelledby={`${g.id}-h`}>
+        <div class="wrap">
+          <div class="chap__hd">
+            <p class="alt-tag mono">
+              <b>{pad2(gi + 1)}</b> {g.items.length} hizmet
+            </p>
+            <h2 class="wide l" id={`${g.id}-h`}>
+              {g.title}
+            </h2>
+            <p class="lead">{g.lead}</p>
+          </div>
+          <ul class="rows">
+            {g.items.map((s) => (
+              <li class="row">
+                <span class="row__no mono">{s.no}</span>
+                <h3>{s.name}</h3>
+                <p>
+                  {s.text}
+                  {s.read && (
+                    <span class="row__read">
+                      Okuyun: {s.read.map((l, li) => <>{li > 0 && ', '}<a href={l.href}>{l.label}</a></>)}
+                    </span>
+                  )}
+                </p>
+                <a class="row__go" href={wa(`Merhaba, ${s.ask} için teklif almak istiyorum.`)} rel="noopener">
+                  Teklif al<span class="sr">: {s.name}</span> <span class="arrow" aria-hidden="true">→</span>
+                </a>
+                {WORKS[s.name] && <Showcase {...WORKS[s.name]} />}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    ))
+  }
+  <Ground />
+</Base>
