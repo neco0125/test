@@ -1247,6 +1247,13 @@ html {
   opacity: 0;
   transition: opacity 0.6s;
 }
+/* Sessiz döngü kapak resminden 1px küçük: Chrome sonradan gelen videoyu daha büyük sayıp
+   LCP'yi geciktirmesin (kapak altta olduğundan fark görünmez) */
+.case__a video:not([controls]) {
+  inset: 1px;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+}
 .case__a video.on {
   opacity: 1;
 }
