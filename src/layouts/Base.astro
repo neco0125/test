@@ -317,6 +317,7 @@ const isCurrent = (href: string) => path === href || (href !== home && path.star
           tick(v);
         };
         const unloop = (v) => (v.pause(), lio.unobserve(v), loops.delete(v), v.remove());
+        qa('video[data-src]').forEach((v) => new IntersectionObserver(([e], o) => e.isIntersecting && (o.disconnect(), (v.src = v.dataset.src), lite ? (v.controls = true) : (seen.set(v, true), loops.add(v), lio.observe(v), tick(v))), { rootMargin: '300px' }).observe(v));
         const hero = q('[data-hero]');
         if (hero && !lite) later(() => loop(hero, mm('(max-aspect-ratio: 1/1), (max-width: 760px)') ? hero.dataset.s : hero.dataset.l), 1200);
         if (!lite)

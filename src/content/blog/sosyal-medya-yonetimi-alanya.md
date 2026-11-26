@@ -60,7 +60,7 @@ Sektöre göre değişir. Otel için havadan bir açılış planı, restoran iç
 
 Kısa bir hazırlık anı bile tek başına içerik olur. Bir kebap restoranı için çektiğimiz tanıtımda turkuaz fonun önünde dökülen soğanı ağır çekimle kullandık; mangal planlarıyla birlikte dikey kurguya girdi. Diğer örnekler [galeride](/galeri/).
 
-<video src="/media/sogan-onizleme.mp4" width="464" height="824" autoplay muted loop playsinline preload="metadata" aria-label="Közde dumanlar içinde tavuk şiş, turkuaz fonun önünde eldivenli elden dökülen doğranmış soğan ve ızgarada et, ağır çekim" style="width:min(100%,18rem);height:auto;display:block"></video>
+<video data-src="/media/sogan-onizleme.mp4" width="464" height="824" muted loop playsinline preload="metadata" aria-label="Közde dumanlar içinde tavuk şiş, turkuaz fonun önünde eldivenli elden dökülen doğranmış soğan ve ızgarada et, ağır çekim" style="width:min(100%,18rem);height:auto;display:block"></video>
 
 ![Kamera arkası: Bir restoranda sosyal medya çekimi. Kameraman, gimbal üzerindeki kamerayla közde pişen etlerin ve dumanı tüten ocağın önünde çekim yapıyor.](../../assets/img/kamera-arkasi-izgara.jpg)
 

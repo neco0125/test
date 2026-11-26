@@ -83,10 +83,10 @@ const schema = {
                 {g.gif ? (
                   <picture>
                     <source type="image/webp" srcset={g.gif.replace(/\.gif$/, '.webp')} />
-                    <img src={g.gif} width={720} height={1280} style="object-position:50% 0" alt={g.alt[lang]} loading={i < 3 ? 'eager' : 'lazy'} decoding="async" />
+                    <img src={g.gif} width={720} height={1280} style="object-position:50% 0" alt={g.alt[lang]} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
                   </picture>
                 ) : (
-                <img src={g.img} srcset={g.srcset} sizes={SIZES} width={g.vertical ? 720 : 1280} height={g.vertical ? 1280 : 720} alt={g.alt[lang]} loading={i < 3 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} decoding="async" />
+                <img src={g.img} srcset={g.srcset} sizes={SIZES} width={g.vertical ? 720 : 1280} height={g.vertical ? 1280 : 720} alt={g.alt[lang]} loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} decoding="async" />
                 )}
               </a>
             ) : g.gif && !g.pv ? (
@@ -94,12 +94,12 @@ const schema = {
                 {/* Videosuz kutu: yalnızca hareketli görsel (WebP, eski tarayıcıya GIF) */}
                 <picture>
                   <source type="image/webp" srcset={g.gif.replace(/\.gif$/, '.webp')} />
-                  <img src={g.gif} width={g.vertical ? 720 : 1280} height={g.vertical ? 1280 : 720} style="object-position:50% 0" alt={g.alt[lang]} loading={i < 3 ? 'eager' : 'lazy'} decoding="async" />
+                  <img src={g.gif} width={g.vertical ? 720 : 1280} height={g.vertical ? 1280 : 720} style="object-position:50% 0" alt={g.alt[lang]} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
                 </picture>
               </div>
             ) : (
               <div class="stage__play case__a" data-pv={g.pv}>
-                <img src={g.img} srcset={g.srcset} sizes={SIZES} width={g.vertical ? 720 : 1280} height={g.vertical ? 1280 : 720} alt={g.alt[lang]} loading={i < 3 ? 'eager' : 'lazy'} decoding="async" />
+                <img src={g.img} srcset={g.srcset} sizes={SIZES} width={g.vertical ? 720 : 1280} height={g.vertical ? 1280 : 720} alt={g.alt[lang]} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
               </div>
             )}
           </div>

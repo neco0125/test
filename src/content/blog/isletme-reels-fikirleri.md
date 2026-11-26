@@ -30,7 +30,7 @@ Otel ve restoranda en güçlü görüntü çoğu zaman konum. Denize, kaleye ya 
 
 Aynı görüntüyü farklı bir biçimde sunmak da dikkat çeker. Bir kebapçı için hazırladığımız Reels'te her gerçek plan, aynı karenin çizgi roman çizimine dönüşüyor: önce şişe işlenen kıyma, sonra kazandan alınan çorba ve buharın çizimi, en son odun ateşli fırın. Örneği [galeride](/galeri/kebap/) görebilirsiniz.
 
-<video src="/media/kebap-onizleme.mp4" width="464" height="824" autoplay muted loop playsinline preload="metadata" aria-label="Bir kebapçının mutfağında şişe işlenen kıyma, kazandan alınan çorba ve odun ateşli fırın; her plan aynı karenin çizgi roman çizimine dönüşüyor" style="width:min(100%,18rem);height:auto;display:block"></video>
+<video data-src="/media/kebap-onizleme.mp4" width="464" height="824" muted loop playsinline preload="metadata" aria-label="Bir kebapçının mutfağında şişe işlenen kıyma, kazandan alınan çorba ve odun ateşli fırın; her plan aynı karenin çizgi roman çizimine dönüşüyor" style="width:min(100%,18rem);height:auto;display:block"></video>
 
 Otel için ayrıntılı plan listesi [otel ve yat için drone tanıtım videosu](/blog/otel-yat-drone-tanitim-videosu/), restoran için [restoran tanıtım videosu](/blog/restoran-tanitim-videosu/) yazısında.
 

@@ -46,7 +46,7 @@ Yabancı misafiri çok olan işletmelerde yazıları kısa tutup birkaç dilde h
 
 Alanya'da bir kuaför salonu için çektiğimiz örnekte drone sahil caddesinin üstünden ilerliyor. Yoldaki oteller iğneyle işaretleniyor, salonun yeri de adıyla birlikte etiketle gösteriliyor. Dikey kesimi [galeride](/galeri/konum/) izleyebilirsiniz.
 
-<video src="/media/konum-onizleme.mp4" width="464" height="832" autoplay muted loop playsinline preload="metadata" aria-label="Alanya'da sahil caddesi, oteller ve park havadan; caddenin ucunda bir kuaför salonunun yerini gösteren etiket" style="width:min(100%,18rem);height:auto;display:block"></video>
+<video data-src="/media/konum-onizleme.mp4" width="464" height="832" muted loop playsinline preload="metadata" aria-label="Alanya'da sahil caddesi, oteller ve park havadan; caddenin ucunda bir kuaför salonunun yerini gösteren etiket" style="width:min(100%,18rem);height:auto;display:block"></video>
 
 ## Düğün mekânı için konum videosu
 

@@ -49,7 +49,8 @@ for (const f of pages) {
   }
   // 13.11.2026: çerez onayı + GA4 yükleyici (~1,2 KB) için sınır 6 KB → 7,5 KB
   // 14.11.2026: tek video oynatma + ekran dışı döngüleri durdurma (~0,9 KB) için 7,5 KB → 9 KB
-  if (js > 9 * 1024) problems.push(`${name}: JS ${js} bayt (> 9 KB)`);
+  // 26.11.2026: yazı içi videoları ekrana yaklaşınca indirme (~0,25 KB; ilk yükten 1,3 MB'a kadar video düşer) için 9 KB → 9,5 KB
+  if (js > 9.5 * 1024) problems.push(`${name}: JS ${js} bayt (> 9,5 KB)`);
 
   // 4. Türkçe karakter ve dil
   const want = name.startsWith('/en/') ? 'en' : name.startsWith('/ru/') ? 'ru' : name.startsWith('/uk/') ? 'uk' : 'tr';
